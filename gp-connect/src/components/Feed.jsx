@@ -7,9 +7,12 @@ import socketService from '../services/socket.js';
 export const getFeeds = async () => {
   try {
     const response = await postsAPI.getPosts();
+    console.log('📡 API Response:', response);
+    console.log('📦 Response data:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching feeds:', error);
+    console.error('❌ Error fetching feeds:', error);
+    console.error('Error details:', error.response?.data || error.message);
     return [];
   }
 };
@@ -21,6 +24,12 @@ export default function Feed({ onNavigateToProfile }) {
   const [postStates, setPostStates] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
 
+  // Debug: Track posts changes
+  useEffect(() => {
+    console.log('🔄 Posts state changed. New length:', posts.length);
+    console.log('📝 Current posts:', posts);
+  }, [posts]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -28,6 +37,7 @@ export default function Feed({ onNavigateToProfile }) {
         setError('');
         
         // Fetch current user first
+        let currentUserData = null;
         const currentUserResponse = await fetch('http://localhost:5000/api/profile/me', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -35,17 +45,21 @@ export default function Feed({ onNavigateToProfile }) {
         });
         
         if (currentUserResponse.ok) {
-          const currentUserData = await currentUserResponse.json();
-          setCurrentUser(currentUserData.user);
+          const userData = await currentUserResponse.json();
+          currentUserData = userData.user;
+          setCurrentUser(currentUserData);
         }
         
         // Fetch posts
         const fetchedPosts = await getFeeds();
+        console.log('🔍 Fetched posts:', fetchedPosts);
+        console.log('📊 Number of posts:', fetchedPosts.length);
+        console.log('👤 Current user ID:', currentUserData?._id);
         setPosts(fetchedPosts);
         
         // Initialize post states for each post with real data
         const initialStates = {};
-        const currentUserId = currentUser?._id;
+        const currentUserId = currentUserData?._id; // Use the freshly fetched data, not state
         fetchedPosts.forEach(post => {
           // Check if current user has liked this post
           const isLiked = currentUserId && post.likes && post.likes.some(like => {

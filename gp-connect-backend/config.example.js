@@ -10,3 +10,4 @@ export const config = {
   EMAIL_USER: 'your_email@gmail.com',
   EMAIL_PASS: 'your_app_password'
 };
+
