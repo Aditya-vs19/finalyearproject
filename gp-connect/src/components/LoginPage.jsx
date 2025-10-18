@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './LoginPage.css';
 import { authAPI } from '../services/api';
 
-// Add Dancing Script font import
+
 const style = document.createElement('style');
 style.textContent = `
   @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap');

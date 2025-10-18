@@ -72,8 +72,7 @@ function OtpVerificationPage({ email, onVerificationSuccess, onBackToRegister })
     setIsLoading(true);
     
     try {
-      // You can implement a resend OTP endpoint if needed
-      // For now, we'll show a message
+      
       alert('Please register again to receive a new OTP.');
       onBackToRegister();
     } catch (error) {

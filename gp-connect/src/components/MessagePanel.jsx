@@ -2,23 +2,18 @@ import React, { useState } from 'react';
 import './MessagePanel.css';
 
 const messages = [
-  { name: 'Suru 🌸', preview: 'Hey, did you see my last post?', chat: [
+  { name: 'Aditya', preview: 'Hey, did you see my last post?', chat: [
     { from: 'them', text: 'Hey, did you see my last post?' },
     { from: 'me', text: 'Yeah, it was awesome!' },
   ] },
-  { name: 'Vishu ⚡', preview: 'Let’s meet tomorrow!', chat: [
+  { name: 'Vedant', preview: 'Let’s meet tomorrow!', chat: [
     { from: 'them', text: 'Let’s meet tomorrow!' },
     { from: 'me', text: 'Sure, what time?' },
   ] },
-  { name: 'Hotspot ', preview: 'Maddarchod salya , parat chedl tr FIR krel , FUCK OFF!!!1.', chat: [
-    { from: 'them', text: 'Maddarchod salya , parat chedl tr FIR krel , FUCK OFF!!!1.' },
-  ] },
-  { name: 'Vedu 🌸', preview: 'Hey, did you see my last post?', chat: [
+  { name: 'Sairaj', preview: 'Hey, did you see my last post?', chat: [
     { from: 'them', text: 'Hey, did you see my last post?' },
   ] },
-  { name: 'Punde yz⚡', preview: 'Let’s meet tomorrow!', chat: [
-    { from: 'them', text: 'Let’s meet tomorrow!' },
-  ] },
+  
   // more dummy messages...
 ];
 
