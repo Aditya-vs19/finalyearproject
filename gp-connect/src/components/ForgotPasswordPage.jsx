@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import './ForgotPasswordPage.css';
 import { FaArrowLeft, FaEnvelope, FaCheckCircle } from 'react-icons/fa';
+import { authAPI } from '../services/api';
 
 function ForgotPasswordPage({ onNavigate }) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,21 +30,28 @@ function ForgotPasswordPage({ onNavigate }) {
     }
 
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
+      const response = await authAPI.requestPasswordOtp({ email: normalizedEmail });
+      setSuccessMessage(response.data?.message || 'If that email exists, an OTP has been sent.');
+      setEmail(normalizedEmail);
       setIsSuccess(true);
-      
-      // Reset form after showing success
-      setTimeout(() => {
-        onNavigate('login');
-      }, 3000);
-    }, 2000);
+    } catch (apiError) {
+      console.error('Failed to request password OTP:', apiError.response?.data || apiError.message);
+      const apiMessage = apiError.response?.data?.message || 'Unable to process your request right now. Please try again later.';
+      setError(apiMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleBackToLogin = () => {
     onNavigate('login');
+  };
+
+  const handleContinueToOtp = () => {
+    onNavigate('otp', { email });
   };
 
   if (isSuccess) {
@@ -51,13 +60,15 @@ function ForgotPasswordPage({ onNavigate }) {
         <div className="forgot-password-container">
           <div className="success-content">
             <FaCheckCircle className="success-icon" />
-            <h2>Reset Link Sent!</h2>
-            <p>We've sent a password reset link to:</p>
+            <h2>OTP Sent!</h2>
+            <p>{successMessage}</p>
             <p className="email-display">{email}</p>
             <p className="instructions">
-              Please check your email and click the link to reset your password. 
-              The link will expire in 1 hour.
+              Enter the 6-digit code we just emailed you to verify your identity. Codes expire in 5 minutes.
             </p>
+            <button className="continue-btn" onClick={handleContinueToOtp}>
+              Enter OTP
+            </button>
             <button className="back-btn" onClick={handleBackToLogin}>
               <FaArrowLeft /> Back to Login
             </button>
@@ -78,7 +89,7 @@ function ForgotPasswordPage({ onNavigate }) {
           <div className="forgot-password-header-section">
             
             <h2>Forgot Password</h2>
-            <p>Enter your email to receive a password reset link</p>
+            <p>Enter your email to receive a one-time login code</p>
           </div>
 
           <form onSubmit={handleReset} className="forgot-password-form">
@@ -102,7 +113,7 @@ function ForgotPasswordPage({ onNavigate }) {
               className={`reset-button ${isLoading ? 'loading' : ''}`}
               disabled={isLoading}
             >
-              {isLoading ? 'Sending...' : 'Send Reset Link'}
+              {isLoading ? 'Sending...' : 'Send OTP'}
             </button>
           </form>
 

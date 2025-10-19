@@ -3,15 +3,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const sendEmail = async (email, subject, message) => {
+const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
   try {
     // Check if email configuration is set
     if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       throw new Error('Email configuration is incomplete. Please check your .env file.');
     }
 
-    console.log('Attempting to send email to:', email);
-    console.log('Using SMTP host:', process.env.EMAIL_HOST);
+    console.log('Attempting to send email via SMTP host:', process.env.EMAIL_HOST);
     console.log('Using email user:', process.env.EMAIL_USER);
 
     // Create transporter
@@ -30,7 +29,8 @@ const sendEmail = async (email, subject, message) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: subject,
-      html: message,
+      html: htmlMessage,
+      text: textMessage || undefined,
     };
 
     // Send email

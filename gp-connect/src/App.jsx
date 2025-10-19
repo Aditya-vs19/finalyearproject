@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import LoginPage from './components/LoginPage';
 import RegistrationPage from './components/RegisterPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
+import ForgotPasswordOtpPage from './components/ForgotPasswordOtpPage';
 import OtpVerificationPage from './components/OtpVerificationPage';
 import HomePage from './components/HomePage';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -13,6 +14,8 @@ function App() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showOtpVerification, setShowOtpVerification] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [showForgotPasswordOtp, setShowForgotPasswordOtp] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
 
   // Check for existing token on app load
   useEffect(() => {
@@ -50,6 +53,10 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
+    setShowRegister(false);
+    setShowForgotPassword(false);
+    setShowOtpVerification(false);
+    setShowForgotPasswordOtp(false);
   };
 
   const handleRegisterSuccess = (email) => {
@@ -66,6 +73,11 @@ function App() {
   const handleBackToRegister = () => {
     setShowOtpVerification(false);
     setShowRegister(true);
+  };
+
+  const handleForgotPasswordOtpSuccess = () => {
+    setIsLoggedIn(true);
+    setShowForgotPasswordOtp(false);
   };
 
   // Show loading spinner while checking authentication
@@ -111,12 +123,30 @@ function App() {
           onVerificationSuccess={handleOtpVerificationSuccess}
           onBackToRegister={handleBackToRegister}
         />
+      ) : showForgotPasswordOtp ? (
+        <ForgotPasswordOtpPage
+          email={forgotPasswordEmail}
+          onOtpVerified={handleForgotPasswordOtpSuccess}
+          onBackToForgot={() => {
+            setShowForgotPasswordOtp(false);
+            setShowForgotPassword(true);
+            setForgotPasswordEmail('');
+          }}
+        />
       ) : showForgotPassword ? (
         <ForgotPasswordPage
-          onNavigate={(page) => {
+          onNavigate={(page, payload) => {
             if (page === 'login') {
               setShowForgotPassword(false);
               setShowRegister(false);
+              setShowForgotPasswordOtp(false);
+              setForgotPasswordEmail('');
+            }
+            if (page === 'otp') {
+              const emailFromPayload = payload?.email || '';
+              setForgotPasswordEmail(emailFromPayload.trim().toLowerCase());
+              setShowForgotPassword(false);
+              setShowForgotPasswordOtp(true);
             }
           }}
         />
@@ -128,8 +158,18 @@ function App() {
       ) : (
         <LoginPage
           onLogin={() => setIsLoggedIn(true)}
-          onSwitchToRegister={() => setShowRegister(true)}
-          onSwitchToForgotPassword={() => setShowForgotPassword(true)}
+          onSwitchToRegister={() => {
+            setShowRegister(true);
+            setShowForgotPassword(false);
+            setShowForgotPasswordOtp(false);
+            setForgotPasswordEmail('');
+          }}
+          onSwitchToForgotPassword={() => {
+            setShowForgotPassword(true);
+            setShowRegister(false);
+            setShowForgotPasswordOtp(false);
+            setForgotPasswordEmail('');
+          }}
         />
       )}
     </>

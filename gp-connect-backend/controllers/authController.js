@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
+import { requestPasswordOtp, verifyPasswordOtp } from '../services/passwordResetService.js';
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -158,4 +159,99 @@ const authUser = asyncHandler(async (req, res) => {
   }
 });
 
-export { registerUser, verifyOtp, authUser };
+const forgotPasswordOtp = asyncHandler(async (req, res) => {
+  const { email } = req.body || {};
+  const genericResponse = { message: 'If that email exists, an OTP has been sent.' };
+
+  if (!email || typeof email !== 'string') {
+    return res.status(200).json(genericResponse);
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!normalizedEmail) {
+    return res.status(200).json(genericResponse);
+  }
+
+  const user = await User.findOne({ email: normalizedEmail });
+
+  if (!user || !user.isVerified) {
+    return res.status(200).json(genericResponse);
+  }
+
+  try {
+    await requestPasswordOtp({
+      user,
+      email: user.email,
+      ip: req.ip,
+      sendEmailFn: sendEmail,
+    });
+  } catch (error) {
+    console.error('Failed to send password OTP:', error.message);
+  }
+
+  return res.status(200).json(genericResponse);
+});
+
+const resendPasswordOtp = asyncHandler(async (req, res) => {
+  return forgotPasswordOtp(req, res);
+});
+
+const verifyPasswordOtpLogin = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body || {};
+
+  if (!email || !otp || typeof email !== 'string' || typeof otp !== 'string') {
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!normalizedEmail || otp.trim().length === 0) {
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
+  }
+
+  const user = await User.findOne({ email: normalizedEmail });
+
+  if (!user || !user.isVerified) {
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
+  }
+
+  const verificationResult = await verifyPasswordOtp({
+    user,
+    otp: otp.trim(),
+    ip: req.ip,
+  });
+
+  if (verificationResult.status !== 'verified') {
+    if (verificationResult.status === 'locked') {
+      return res.status(400).json({ message: 'Too many invalid attempts. Please try again later.' });
+    }
+
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
+  }
+
+  const token = generateToken(user._id, {
+    expiresIn: '15m',
+    payload: { authMethod: 'otp' },
+  });
+
+  return res.status(200).json({
+    message: 'OTP verified',
+    token,
+    user: {
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      enrollment: user.enrollment,
+    },
+  });
+});
+
+export {
+  registerUser,
+  verifyOtp,
+  authUser,
+  forgotPasswordOtp,
+  resendPasswordOtp,
+  verifyPasswordOtpLogin,
+};
