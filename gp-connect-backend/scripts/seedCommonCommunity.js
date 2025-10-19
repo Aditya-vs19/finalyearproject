@@ -20,9 +20,9 @@ const seedCommonCommunity = async () => {
   try {
     await connectDB();
     
-    console.log('Starting CommonCommunity seed...');
+  console.log('Starting Official Announcements Community seed...');
     
-    // Delete existing community with the specific ID
+  // Delete existing community with the specific ID
     const deleteResult = await Community.deleteOne({ _id: '68dd52a283642af8c35205cc' });
     console.log(`Deleted existing community: ${deleteResult.deletedCount}`);
     
@@ -40,11 +40,11 @@ const seedCommonCommunity = async () => {
       await systemUser.save();
     }
     
-    // Create the CommonCommunity with the specific ID
+    // Create the announcement community with the specific ID
     const commonCommunity = new Community({
       _id: '68dd52a283642af8c35205cc',
-      name: 'GP-ConneX CommonCommunity',
-      description: 'The main community for GP-Connect users to connect, share ideas, and chat together.',
+      name: 'Official Announcements Community',
+      description: 'Stay informed with the latest news, alerts, and official updates from the GP-ConneX team.',
       avatar: '🌐',
       members: [],
       messages: [],
@@ -53,13 +53,13 @@ const seedCommonCommunity = async () => {
     
     await commonCommunity.save();
     
-    console.log('✅ CommonCommunity created successfully!');
+  console.log('✅ Official Announcements Community created successfully!');
     console.log(`Community ID: ${commonCommunity._id}`);
     console.log(`Community Name: ${commonCommunity.name}`);
     console.log(`Community Description: ${commonCommunity.description}`);
     
     console.log('\n🎉 Seed completed successfully!');
-    console.log('The GP-ConneX CommonCommunity is ready for use.');
+  console.log('The Official Announcements Community is ready for use.');
     
     process.exit(0);
   } catch (error) {

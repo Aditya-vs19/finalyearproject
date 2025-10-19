@@ -15,6 +15,10 @@ const communitySchema = mongoose.Schema(
       type: String,
       default: '🌐',
     },
+    isAnnouncement: {
+      type: Boolean,
+      default: false,
+    },
     members: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'

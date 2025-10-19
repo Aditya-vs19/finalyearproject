@@ -140,11 +140,14 @@ function RegistrationPage({ onRegister, onSwitchToLogin }) {
           onChange={e => setDepartment(e.target.value)}
         >
           <option value="">Select Department</option>
-          <option value="Computer">Computer</option>
-          <option value="Mechanical">Mechanical</option>
-          <option value="Civil">Civil</option>
+          <option value="Computer">Computer Engineering</option>
+          <option value="IT">Information Technology</option>
+          <option value="Mechanical">Mechanical Engineering</option>
+          <option value="Civil">Civil Engineering</option>
+          <option value="Electrical">Electrical Engineering</option>
+          <option value="ENTC">Electronics and Telecommunication (ENTC)</option>
+          <option value="DDGM">DDGM</option>
           <option value="Metallurgy">Metallurgy</option>
-          <option value="IT">IT</option>
         </select>
         <input
           className={`auth-input${passwordError ? ' auth-input-error' : ''}`}

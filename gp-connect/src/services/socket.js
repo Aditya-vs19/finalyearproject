@@ -88,6 +88,18 @@ class SocketService {
     }
   }
 
+  onCommunityMetaUpdate(callback) {
+    if (this.socket) {
+      this.socket.on('community:metaUpdate', callback);
+    }
+  }
+
+  offCommunityMetaUpdate(callback) {
+    if (this.socket) {
+      this.socket.off('community:metaUpdate', callback);
+    }
+  }
+
   // Post like functionality
   onPostLikeUpdate(callback) {
     if (this.socket) {

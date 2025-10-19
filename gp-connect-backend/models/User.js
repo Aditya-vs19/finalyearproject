@@ -34,7 +34,7 @@ const userSchema = mongoose.Schema(
     department: {
       type: String,
       required: true,
-      enum: ['Computer', 'Mechanical', 'Civil', 'Metallurgy', 'IT', 'Meta'],
+      enum: ['Computer', 'Mechanical', 'Civil', 'Metallurgy', 'IT', 'Electrical', 'ENTC', 'DDGM', 'Meta'],
     },
     isVerified: {
       type: Boolean,

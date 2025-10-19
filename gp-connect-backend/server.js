@@ -11,12 +11,10 @@ import profileRoutes from './routes/profileRoutes.js';
 import communityRoutes from './routes/communityRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import initializeCommunities from './utils/initializeCommunities.js';
 
 // Load environment variables
 dotenv.config();
-
-// Connect to MongoDB
-connectDB();
 
 const app = express();
 const server = createServer(app);
@@ -109,6 +107,16 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const startServer = async () => {
+  await connectDB();
+  await initializeCommunities();
+
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+};
+
+startServer().catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 });

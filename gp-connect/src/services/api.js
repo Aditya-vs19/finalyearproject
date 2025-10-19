@@ -63,11 +63,12 @@ export const postsAPI = {
 
 // Community API functions
 export const communitiesAPI = {
-  getCommunity: () => API.get('/community'),
-  joinCommunity: () => API.post('/community/join'),
-  leaveCommunity: () => API.post('/community/leave'),
-  getCommunityMessages: () => API.get('/community/messages'),
-  sendMessage: (content) => API.post('/community/message', { content }),
+  listCommunities: () => API.get('/community'),
+  getCommunity: (communityId) => API.get(`/community/${communityId}`),
+  joinCommunity: (communityId) => API.post(`/community/${communityId}/join`),
+  leaveCommunity: (communityId) => API.post(`/community/${communityId}/leave`),
+  getCommunityMessages: (communityId) => API.get(`/community/${communityId}/messages`),
+  sendMessage: (communityId, content) => API.post(`/community/${communityId}/messages`, { content }),
 };
 
 export const messagesAPI = {

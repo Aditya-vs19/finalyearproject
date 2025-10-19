@@ -1,214 +1,723 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './CommonCommunity.css';
-import { communitiesAPI } from '../services/api.js';
+import { communitiesAPI, profileAPI } from '../services/api.js';
 import socketService from '../services/socket.js';
+import { getProfilePicUrl, handleImageError } from '../utils/imageUtils.js';
 
-const COMMUNITY_ID = '68dd52a283642af8c35205cc';
+const MAX_VISIBLE_MEMBERS = 16;
 
 export default function CommonCommunity() {
-  const [community, setCommunity] = useState(null);
+  const [communities, setCommunities] = useState([]);
+  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
+  const [activeCommunity, setActiveCommunity] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isJoining, setIsJoining] = useState(false);
-  const [isLeaving, setIsLeaving] = useState(false);
+  const [listLoading, setListLoading] = useState(true);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [listError, setListError] = useState('');
+  const [chatError, setChatError] = useState('');
+  const [actionCommunityId, setActionCommunityId] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [error, setError] = useState(null);
+
+  const currentUserRef = useRef(null);
+  const selectedCommunityIdRef = useRef(null);
+  const previousCommunityIdRef = useRef(null);
+  const activeCommunityIdRef = useRef(null);
   const messagesEndRef = useRef(null);
 
-  // Load current user and community data
-  useEffect(() => {
-    loadCurrentUser();
-    loadCommunity();
-  }, []);
-
-  // Initialize socket connection
-  useEffect(() => {
-    socketService.connect();
-    return () => {
-      socketService.disconnect();
-    };
-  }, []);
-
-  // Set up socket listeners when component mounts
-  useEffect(() => {
-    socketService.onNewMessage(handleNewMessage);
-    socketService.onMemberUpdate(handleMemberUpdate);
-    
-    return () => {
-      socketService.offNewMessage(handleNewMessage);
-      socketService.offMemberUpdate(handleMemberUpdate);
-    };
-  }, []);
-
-  // Join community room when user is a member
-  useEffect(() => {
-    if (community && isMember() && socketService.socket) {
-      socketService.joinCommunity(COMMUNITY_ID);
+  const sortCommunities = useCallback((list) => {
+    if (!Array.isArray(list)) {
+      return [];
     }
-  }, [community]);
 
-  const loadCurrentUser = async () => {
+    const cloned = [...list];
+    cloned.sort((a, b) => {
+      if (a.isAnnouncement && !b.isAnnouncement) return -1;
+      if (!a.isAnnouncement && b.isAnnouncement) return 1;
+      return a.name.localeCompare(b.name);
+    });
+    return cloned;
+  }, []);
+
+  const handleReturnToList = () => {
+    setSelectedCommunityId(null);
+    setActiveCommunity(null);
+    setMessages([]);
+    setChatError('');
+    setNewMessage('');
+  };
+
+  const loadCommunities = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const response = await fetch('http://localhost:5000/api/profile/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`
+      setListLoading(true);
+      setListError('');
+
+      const needsUser = !currentUserRef.current;
+
+      if (needsUser) {
+        const [userResponse, communitiesResponse] = await Promise.all([
+          profileAPI.getCurrentUserProfile(),
+          communitiesAPI.listCommunities(),
+        ]);
+
+        const userData = userResponse.data.user;
+        setCurrentUser(userData);
+        currentUserRef.current = userData;
+
+        const communityList = communitiesResponse.data || [];
+        setCommunities(sortCommunities(communityList));
+
+        if (!selectedCommunityIdRef.current) {
+          const firstJoined = communityList.find((community) => community.isMember);
+          if (firstJoined) {
+            setSelectedCommunityId(firstJoined._id);
           }
-        });
-        if (response.ok) {
-          const userData = await response.json();
-          setCurrentUser(userData.user);
         }
+      } else {
+        const communitiesResponse = await communitiesAPI.listCommunities();
+        const communityList = communitiesResponse.data || [];
+        setCommunities(sortCommunities(communityList));
       }
     } catch (error) {
-      console.error('Error loading current user:', error);
-    }
-  };
-
-  const loadCommunity = async () => {
-    try {
-      setIsLoading(true);
-      const response = await communitiesAPI.getCommunity();
-      setCommunity(response.data);
-    } catch (error) {
-      console.error('Error loading community:', error);
-      setError('Failed to load community');
+      console.error('Error loading communities:', error);
+      setListError(error.response?.data?.message || 'Failed to load communities');
     } finally {
-      setIsLoading(false);
+      setListLoading(false);
     }
   };
 
-  const loadMessages = async () => {
-    try {
-      const response = await communitiesAPI.getCommunityMessages();
-      setMessages(response.data);
-    } catch (error) {
-      console.error('Error loading messages:', error);
+  const retryActiveCommunity = () => {
+    if (!selectedCommunityIdRef.current) {
+      return;
     }
+    const communityId = selectedCommunityIdRef.current;
+    setChatError('');
+    setSelectedCommunityId(null);
+    setTimeout(() => {
+      setSelectedCommunityId(communityId);
+    }, 0);
   };
 
-  const isMember = () => {
-    if (!currentUser || !community || !community.members) {
-      return false;
+  const handleOpenCommunity = (communityId, isMember) => {
+    if (!isMember) {
+      return;
     }
-    return community.members.some(member => 
-      (typeof member === 'object' ? member._id : member) === currentUser._id
-    );
+    setSelectedCommunityId(communityId);
   };
 
-  const handleJoin = async () => {
-    if (!currentUser) {
+  const handleJoin = async (communityId) => {
+    if (!currentUserRef.current) {
       alert('Please wait while we load your profile...');
       return;
     }
 
     try {
-      setIsJoining(true);
-      const response = await communitiesAPI.joinCommunity();
-      setCommunity(response.data.community);
-      
-      // Join socket room
-      socketService.joinCommunity(COMMUNITY_ID);
-      
-      // Load messages after joining
-      await loadMessages();
+      setActionCommunityId(communityId);
+      const response = await communitiesAPI.joinCommunity(communityId);
+      const joinedCommunity = response.data.community;
+
+      setCommunities((prev) =>
+        sortCommunities(
+          prev.map((community) =>
+            community._id === communityId
+              ? {
+                  ...community,
+                  membersCount: joinedCommunity?.membersCount ?? community.membersCount,
+                  isMember: true,
+                  memberIds: joinedCommunity?.memberIds || community.memberIds,
+                }
+              : community
+          )
+        )
+      );
+
+      setActiveCommunity((prev) => (prev && prev._id === communityId ? joinedCommunity : prev));
+      setMessages([]);
+      setSelectedCommunityId(communityId);
     } catch (error) {
       console.error('Error joining community:', error);
-      alert('Failed to join community. Please try again.');
+      alert(error.response?.data?.message || 'Failed to join community. Please try again.');
     } finally {
-      setIsJoining(false);
+      setActionCommunityId(null);
     }
   };
 
-  const handleLeave = async () => {
-    if (!currentUser) {
+  const handleLeave = async (communityId) => {
+    try {
+      setActionCommunityId(communityId);
+      const response = await communitiesAPI.leaveCommunity(communityId);
+      const updatedCommunity = response.data.community;
+
+      setCommunities((prev) =>
+        sortCommunities(
+          prev.map((community) =>
+            community._id === communityId
+              ? {
+                  ...community,
+                  membersCount: updatedCommunity?.membersCount ?? community.membersCount,
+                  isMember: false,
+                  memberIds: updatedCommunity?.memberIds || community.memberIds,
+                }
+              : community
+          )
+        )
+      );
+
+      if (selectedCommunityIdRef.current === communityId) {
+        handleReturnToList();
+      }
+    } catch (error) {
+      console.error('Error leaving community:', error);
+      alert(error.response?.data?.message || 'Failed to leave community. Please try again.');
+    } finally {
+      setActionCommunityId(null);
+    }
+  };
+
+  const handleSendMessage = async (event) => {
+    event.preventDefault();
+
+    if (!selectedCommunityId || !newMessage.trim() || isSending || !activeCommunity?.canPost) {
       return;
     }
 
-    try {
-      setIsLeaving(true);
-      const response = await communitiesAPI.leaveCommunity();
-      setCommunity(response.data.community);
-      
-      // Leave socket room
-      socketService.leaveCommunity(COMMUNITY_ID);
-      
-      // Clear messages
-      setMessages([]);
-    } catch (error) {
-      console.error('Error leaving community:', error);
-      alert('Failed to leave community. Please try again.');
-    } finally {
-      setIsLeaving(false);
-    }
-  };
-
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || isSending) return;
+    const messageText = newMessage.trim();
+    setNewMessage('');
 
     try {
       setIsSending(true);
-      const messageText = newMessage.trim();
-      setNewMessage('');
-      
-      const response = await communitiesAPI.sendMessage(messageText);
-      // Message will be received via Socket.IO, so no need to add it locally
-      console.log('Message sent successfully:', response.data);
+      await communitiesAPI.sendMessage(selectedCommunityId, messageText);
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message. Please try again.');
-      setNewMessage(newMessage); // Restore message on error
+      setNewMessage(messageText);
+      alert(error.response?.data?.message || 'Failed to send message. Please try again.');
     } finally {
       setIsSending(false);
     }
   };
 
-  const handleNewMessage = (message) => {
-    setMessages(prev => [...prev, message]);
-  };
-
-  const handleMemberUpdate = (data) => {
-    setCommunity(prev => ({
-      ...prev,
-      members: data.members,
-      membersCount: data.membersCount
-    }));
-  };
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+  const handleSocketMessage = (payload) => {
+    if (!payload) {
+      return;
     }
-  }, [messages]);
+
+    const { communityId, message } = payload;
+    if (!communityId || !message) {
+      return;
+    }
+
+    setCommunities((prev) =>
+      sortCommunities(
+        prev.map((community) =>
+          community._id === communityId
+            ? { ...community, lastActivityAt: message.timestamp }
+            : community
+        )
+      )
+    );
+
+    if (activeCommunityIdRef.current === communityId) {
+      setMessages((prev) => [...prev, message]);
+    }
+  };
+
+  const handleSocketMemberUpdate = (payload) => {
+    if (!payload) {
+      return;
+    }
+
+    const { communityId, membersCount, members } = payload;
+    if (!communityId) {
+      return;
+    }
+
+    const currentUserId = currentUserRef.current?._id;
+    const memberIdsFromPayload = Array.isArray(payload.memberIds)
+      ? payload.memberIds.map((id) => id.toString())
+      : null;
+
+    setCommunities((prev) =>
+      sortCommunities(
+        prev.map((community) => {
+        if (community._id !== communityId) {
+          return community;
+        }
+
+        const updatedIsMember =
+          memberIdsFromPayload && currentUserId
+            ? memberIdsFromPayload.includes(currentUserId)
+            : Array.isArray(members) && currentUserId
+              ? members.some((member) => {
+                  const memberId = member?._id || member;
+                  return memberId && memberId.toString() === currentUserId;
+                })
+              : community.isMember;
+
+        return {
+          ...community,
+          membersCount: typeof membersCount === 'number' ? membersCount : community.membersCount,
+          isMember: updatedIsMember,
+        };
+        })
+      )
+    );
+
+    if (activeCommunityIdRef.current === communityId) {
+      setActiveCommunity((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        const updatedMembers = Array.isArray(members) ? members : prev.members;
+        const updatedMemberIds = memberIdsFromPayload || prev.memberIds;
+        let updatedIsMember = prev.isMember;
+
+        if (memberIdsFromPayload && currentUserId) {
+          updatedIsMember = memberIdsFromPayload.includes(currentUserId);
+        } else if (Array.isArray(members) && currentUserId) {
+          updatedIsMember = members.some((member) => {
+            const memberId = member?._id || member;
+            return memberId && memberId.toString() === currentUserId;
+          });
+        }
+
+        return {
+          ...prev,
+          membersCount: typeof membersCount === 'number' ? membersCount : prev.membersCount,
+          members: updatedMembers,
+          memberIds: updatedMemberIds,
+          isMember: updatedIsMember,
+        };
+      });
+    }
+  };
+
+  const handleSocketMetaUpdate = (payload) => {
+    if (!payload) {
+      return;
+    }
+
+    const { communityId, membersCount } = payload;
+    if (!communityId) {
+      return;
+    }
+
+    setCommunities((prev) =>
+      sortCommunities(
+        prev.map((community) =>
+          community._id === communityId
+            ? {
+                ...community,
+                membersCount: typeof membersCount === 'number' ? membersCount : community.membersCount,
+              }
+            : community
+        )
+      )
+    );
+  };
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  if (isLoading) {
+  useEffect(() => {
+    loadCommunities();
+  }, []);
+
+  useEffect(() => {
+    socketService.connect();
+
+    return () => {
+      if (previousCommunityIdRef.current) {
+        socketService.leaveCommunity(previousCommunityIdRef.current);
+      }
+      socketService.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+
+  useEffect(() => {
+    selectedCommunityIdRef.current = selectedCommunityId;
+    activeCommunityIdRef.current = selectedCommunityId;
+  }, [selectedCommunityId]);
+
+  useEffect(() => {
+    const previousId = previousCommunityIdRef.current;
+
+    if (previousId && previousId !== selectedCommunityId) {
+      socketService.leaveCommunity(previousId);
+    }
+
+    if (selectedCommunityId) {
+      socketService.joinCommunity(selectedCommunityId);
+    }
+
+    previousCommunityIdRef.current = selectedCommunityId;
+  }, [selectedCommunityId]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadActiveCommunity = async () => {
+      if (!selectedCommunityId) {
+        setActiveCommunity(null);
+        setMessages([]);
+        setChatError('');
+        return;
+      }
+
+      setChatLoading(true);
+      setChatError('');
+
+      try {
+        const [communityResponse, messagesResponse] = await Promise.all([
+          communitiesAPI.getCommunity(selectedCommunityId),
+          communitiesAPI.getCommunityMessages(selectedCommunityId),
+        ]);
+
+        if (isCancelled) {
+          return;
+        }
+
+        const communityData = communityResponse.data;
+        const messageList = messagesResponse.data || [];
+
+        setActiveCommunity(communityData);
+        activeCommunityIdRef.current = communityData?._id;
+        setMessages(messageList);
+
+        setCommunities((prev) =>
+          prev.map((community) =>
+            community._id === communityData._id
+              ? {
+                  ...community,
+                  membersCount: communityData.membersCount,
+                  isMember: communityData.isMember,
+                  isAnnouncement: communityData.isAnnouncement,
+                }
+              : community
+          )
+        );
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('Error loading community data:', error);
+          setChatError(error.response?.data?.message || 'Failed to load community');
+        }
+      } finally {
+        if (!isCancelled) {
+          setChatLoading(false);
+        }
+      }
+    };
+
+    loadActiveCommunity();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedCommunityId]);
+
+  useEffect(() => {
+    socketService.onNewMessage(handleSocketMessage);
+    socketService.onMemberUpdate(handleSocketMemberUpdate);
+    socketService.onCommunityMetaUpdate(handleSocketMetaUpdate);
+
+    return () => {
+      socketService.offNewMessage(handleSocketMessage);
+      socketService.offMemberUpdate(handleSocketMemberUpdate);
+      socketService.offCommunityMetaUpdate(handleSocketMetaUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  const renderCommunitiesList = () => (
+    <div className="common-community">
+      <div className="communities-wrapper">
+        <div className="communities-header">
+          <h1>Communities</h1>
+          <p>Select a department community to collaborate or view the latest campus announcements.</p>
+        </div>
+        {communities.length === 0 ? (
+          <div className="no-communities">
+            <p>No communities are available yet. Please check back later.</p>
+          </div>
+        ) : (
+          <div className="communities-grid">
+            {communities.map((community) => {
+              const isActionPending = actionCommunityId === community._id;
+              const cardClasses = ['community-card'];
+              if (community.isMember) {
+                cardClasses.push('community-card-member');
+              }
+              if (community.isAnnouncement) {
+                cardClasses.push('community-card-announcement');
+              }
+              return (
+                <div
+                  key={community._id}
+                  className={cardClasses.join(' ')}
+                  onClick={() => handleOpenCommunity(community._id, community.isMember)}
+                >
+                  <div className="community-card-header">
+                    <div className="community-avatar-large">{community.avatar}</div>
+                    <div className="community-card-info">
+                      <h2>{community.name}</h2>
+                      {community.isAnnouncement && <span className="official-badge">Official</span>}
+                      <p>{community.description}</p>
+                    </div>
+                  </div>
+                  <div className="community-card-footer">
+                    <span className="member-count">{community.membersCount || 0} members</span>
+                    {community.isMember ? (
+                      <div className="community-card-actions">
+                        <button
+                          className="view-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleOpenCommunity(community._id, true);
+                          }}
+                        >
+                          Enter
+                        </button>
+                        <button
+                          className="leave-btn"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleLeave(community._id);
+                          }}
+                          disabled={isActionPending}
+                        >
+                          {isActionPending ? 'Leaving...' : 'Leave'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        className="join-btn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleJoin(community._id);
+                        }}
+                        disabled={isActionPending}
+                      >
+                        {isActionPending ? 'Joining...' : 'Join'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderChat = () => {
+    if (chatError) {
+      return (
+        <div className="common-community">
+          <div className="error-container">
+            <h2>Unable to load community</h2>
+            <p>{chatError}</p>
+            <div className="error-actions">
+              <button className="retry-btn" onClick={retryActiveCommunity}>Retry</button>
+              <button className="secondary-btn" onClick={handleReturnToList}>Back to communities</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const visibleMembers = (activeCommunity?.members || []).slice(0, MAX_VISIBLE_MEMBERS);
+    const remainingMembers = Math.max(
+      0,
+      (activeCommunity?.membersCount || 0) - visibleMembers.length
+    );
+
+    return (
+      <div className="common-community">
+        <div className="chat-container">
+          <div className="chat-header">
+            <div className="chat-info">
+              <div className="community-avatar">{activeCommunity?.avatar || '🌐'}</div>
+              <div>
+                <h2 className="chat-title">{activeCommunity?.name || 'Loading...'}</h2>
+                {activeCommunity?.isAnnouncement && (
+                  <p className="chat-subtitle">Official channel · Admin posts only</p>
+                )}
+                <p className="member-count">{activeCommunity?.membersCount || 0} members</p>
+              </div>
+            </div>
+            <div className="chat-actions">
+              <button className="back-btn" onClick={handleReturnToList}>
+                Browse Communities
+              </button>
+              <button
+                className="leave-btn"
+                onClick={() => handleLeave(selectedCommunityId)}
+                disabled={actionCommunityId === selectedCommunityId}
+              >
+                {actionCommunityId === selectedCommunityId ? 'Leaving...' : 'Leave'}
+              </button>
+            </div>
+          </div>
+
+          {chatLoading && (
+            <div className="chat-loading-container">
+              <div className="loading-spinner"></div>
+              <p>Loading community...</p>
+            </div>
+          )}
+
+          {!chatLoading && visibleMembers.length > 0 && (
+            <div className="community-members-strip">
+              <span className="strip-label">Members</span>
+              <div className="strip-list">
+                {visibleMembers.map((member) => (
+                  <div key={member._id} className="strip-member">
+                    {member.profilePic ? (
+                      <img
+                        src={getProfilePicUrl(member.profilePic)}
+                        alt={member.fullName || 'Community member'}
+                        onError={(event) => handleImageError(event)}
+                      />
+                    ) : (
+                      <span className="strip-member-fallback">
+                        {member.fullName ? member.fullName.charAt(0) : '?'}
+                      </span>
+                    )}
+                    <span className="strip-member-name">{member.fullName || 'Member'}</span>
+                  </div>
+                ))}
+                {remainingMembers > 0 && (
+                  <div className="strip-member more-members">+{remainingMembers}</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeCommunity?.isAnnouncement && !activeCommunity?.canPost && (
+            <div className="announcement-banner">
+              🔔 Only the admin can share official announcements in this community.
+            </div>
+          )}
+
+          <div className="messages-container">
+            <div className="messages-list">
+              {messages.length === 0 ? (
+                <div className="no-messages">
+                  <div className="welcome-icon">💬</div>
+                  <h3>
+                    {activeCommunity?.name ? `Welcome to ${activeCommunity.name}!` : 'Welcome!'}
+                  </h3>
+                  <p>
+                    {activeCommunity?.isAnnouncement
+                      ? 'Stay tuned for the latest announcements.'
+                      : 'Start the conversation by sending a message below.'}
+                  </p>
+                </div>
+              ) : (
+                messages.map((message, index) => {
+                  const senderId = message.sender?._id;
+                  const isOwnMessage = senderId && senderId === currentUser?._id;
+                  const previousSenderId = messages[index - 1]?.sender?._id;
+                  const showAvatar = index === 0 || previousSenderId !== senderId;
+
+                  return (
+                    <div
+                      key={message._id || `${message.timestamp}-${index}`}
+                      className={`message-wrapper ${isOwnMessage ? 'own-message' : 'other-message'}`}
+                    >
+                      {!isOwnMessage && showAvatar && (
+                        <div className="message-avatar">
+                          {message.sender?.profilePic ? (
+                            <img
+                              src={getProfilePicUrl(message.sender.profilePic)}
+                              alt={message.sender?.fullName || 'Community member'}
+                              onError={(event) => handleImageError(event)}
+                            />
+                          ) : (
+                            <span>{message.sender?.fullName?.charAt(0) || '?'}</span>
+                          )}
+                        </div>
+                      )}
+                      {!isOwnMessage && !showAvatar && <div className="message-spacer"></div>}
+
+                      <div className="message-bubble">
+                        {!isOwnMessage && showAvatar && (
+                          <div className="message-sender">{message.sender?.fullName || 'Unknown user'}</div>
+                        )}
+                        <div className="message-content">
+                          <div className="message-text">{message.content}</div>
+                          <div className="message-time">{formatTime(message.timestamp)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          <div className="message-input-container">
+            <form onSubmit={handleSendMessage} className="message-form">
+              <input
+                type="text"
+                placeholder={
+                  activeCommunity?.isAnnouncement && !activeCommunity?.canPost
+                    ? 'Only admin can post announcements.'
+                    : 'Type a message...'
+                }
+                value={newMessage}
+                onChange={(event) => setNewMessage(event.target.value)}
+                disabled={isSending || !activeCommunity?.canPost}
+                className={`message-input${!activeCommunity?.canPost ? ' message-input-disabled' : ''}`}
+              />
+              <button
+                type="submit"
+                disabled={
+                  isSending || !newMessage.trim() || !activeCommunity?.canPost
+                }
+                className="send-btn"
+              >
+                {isSending ? <div className="sending-spinner"></div> : 'Send'}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (listLoading) {
     return (
       <div className="common-community">
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>Loading community...</p>
+          <p>Loading communities...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (listError) {
     return (
       <div className="common-community">
         <div className="error-container">
-          <h2>Error</h2>
-          <p>{error}</p>
-          <button onClick={loadCommunity} className="retry-btn">
+          <h2>Something went wrong</h2>
+          <p>{listError}</p>
+          <button className="retry-btn" onClick={loadCommunities}>
             Retry
           </button>
         </div>
@@ -216,144 +725,9 @@ export default function CommonCommunity() {
     );
   }
 
-  if (!community) {
-    return (
-      <div className="common-community">
-        <div className="error-container">
-          <h2>Community Not Found</h2>
-          <p>The GP-ConneX CommonCommunity could not be found.</p>
-        </div>
-      </div>
-    );
+  if (selectedCommunityId) {
+    return renderChat();
   }
 
-  // Show join card if user is not a member
-  if (!isMember()) {
-    return (
-      <div className="common-community">
-        <div className="join-container">
-          <div className="join-card">
-            <div className="community-header">
-              <div className="community-avatar">{community.avatar}</div>
-              <div className="community-info">
-                <h1 className="community-name">{community.name}</h1>
-                <p className="community-description">{community.description}</p>
-                <div className="community-stats">
-                  <span className="member-count">{community.members?.length || 0} members</span>
-                </div>
-              </div>
-            </div>
-            <div className="join-actions">
-              <button 
-                className="join-btn"
-                onClick={handleJoin}
-                disabled={isJoining}
-              >
-                {isJoining ? 'Joining...' : 'Join Community'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show chat interface if user is a member
-  return (
-    <div className="common-community">
-      <div className="chat-container">
-        <div className="chat-header">
-          <div className="chat-info">
-            <div className="community-avatar">{community.avatar}</div>
-            <div>
-              <h2 className="chat-title">{community.name}</h2>
-              <p className="member-count">{community.members?.length || 0} members</p>
-            </div>
-          </div>
-          <button 
-            className="leave-btn"
-            onClick={handleLeave}
-            disabled={isLeaving}
-          >
-            {isLeaving ? 'Leaving...' : 'Leave Community'}
-          </button>
-        </div>
-
-        <div className="messages-container">
-          <div className="messages-list">
-            {messages.length === 0 ? (
-              <div className="no-messages">
-                <div className="welcome-icon">💬</div>
-                <h3>Welcome to {community.name}!</h3>
-                <p>Start the conversation by sending a message below.</p>
-              </div>
-            ) : (
-              messages.map((message, index) => {
-                const isOwnMessage = message.sender?._id === currentUser?._id;
-                const showAvatar = index === 0 || messages[index - 1].sender?._id !== message.sender?._id;
-                
-                return (
-                  <div key={message._id || index} className={`message-wrapper ${isOwnMessage ? 'own-message' : 'other-message'}`}>
-                    {!isOwnMessage && showAvatar && (
-                      <div className="message-avatar">
-                        {message.sender?.profilePic ? (
-                          <img 
-                            src={message.sender.profilePic.startsWith('http') ? message.sender.profilePic : `http://localhost:5000${message.sender.profilePic}`} 
-                            alt={message.sender.fullName}
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.nextSibling.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <span style={{ display: message.sender?.profilePic ? 'none' : 'flex' }}>
-                          {message.sender?.fullName?.charAt(0) || '?'}
-                        </span>
-                      </div>
-                    )}
-                    {!isOwnMessage && !showAvatar && <div className="message-spacer"></div>}
-                    
-                    <div className="message-bubble">
-                      {!isOwnMessage && showAvatar && (
-                        <div className="message-sender">{message.sender?.fullName || 'Unknown User'}</div>
-                      )}
-                      <div className="message-content">
-                        <div className="message-text">{message.content}</div>
-                        <div className="message-time">{formatTime(message.timestamp)}</div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-
-        <div className="message-input-container">
-          <form onSubmit={handleSendMessage} className="message-form">
-            <input
-              type="text"
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              disabled={isSending}
-              className="message-input"
-            />
-            <button 
-              type="submit"
-              disabled={isSending || !newMessage.trim()}
-              className="send-btn"
-            >
-              {isSending ? (
-                <div className="sending-spinner"></div>
-              ) : (
-                'Send'
-              )}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
+  return renderCommunitiesList();
 }
