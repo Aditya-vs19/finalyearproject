@@ -8,13 +8,15 @@ import { requestPasswordOtp, verifyPasswordOtp } from '../services/passwordReset
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { fullName, email, enrollment, password, department } = req.body;
-
-  // Validate enrollment number (must be exactly 7 digits)
-  if (!/^\d{7}$/.test(enrollment)) {
-    res.status(400);
-    throw new Error('Enrollment number must be exactly 7 digits');
-  }
+  const {
+    fullName,
+    email,
+    enrollment,
+    password,
+    departmentCode,
+    departmentName,
+    admissionYear,
+  } = req.registrationInput || {};
 
   // Check if user already exists
   const userExists = await User.findOne({ 
@@ -39,7 +41,9 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     enrollment,
     password,
-    department,
+    department: departmentName,
+    departmentCode,
+    admissionYear,
     otp,
     otpExpires,
   });

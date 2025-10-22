@@ -49,6 +49,7 @@
   font-weight: 700;
   margin: 0;
   background: linear-gradient(90deg, #ffffff, #ffffff);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -180,6 +181,13 @@
   border-color: #ffffff;
   color: #ffffff;
   box-shadow: 0 0 15px rgba(255,255,255,0.3);
+}
+
+.profile-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 .profile-edit-form {
@@ -516,6 +524,32 @@
 
 .follow-profile-btn:disabled:hover {
   box-shadow: none;
+}
+
+.message-profile-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid #444444;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.message-profile-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25);
+}
+
+.message-profile-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Profile Subtitle */

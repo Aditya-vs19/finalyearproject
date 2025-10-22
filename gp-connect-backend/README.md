@@ -34,6 +34,8 @@ This project uses environment variables for sensitive information. You need to c
     
     # JWT Secret
     JWT_SECRET=a-very-strong-secret-key-for-jwt
+    CHAT_SECRET=client-shared-chat-passphrase
+    REDIS_URL=redis://localhost:6379
     
     # Email Configuration (Gmail)
     EMAIL_HOST=smtp.gmail.com
@@ -66,6 +68,7 @@ This project uses environment variables for sensitive information. You need to c
     **Variables:**
     *   `MONGO_URI`: Your MongoDB Atlas connection string.
     *   `JWT_SECRET`: A strong, random string used for signing JWTs.
+    *   `CHAT_SECRET`: Shared symmetric key used by the frontend to encrypt chat payloads. The server stores ciphertext only.
     *   `EMAIL_HOST`: SMTP server host (Gmail: smtp.gmail.com).
     *   `EMAIL_PORT`: SMTP server port (Gmail: 587).
     *   `EMAIL_USER`: Your email address for sending emails.
@@ -77,7 +80,18 @@ This project uses environment variables for sensitive information. You need to c
     ```bash
     npm run dev
     ```
-    This will start the server using `nodemon`, which automatically restarts the server when file changes are detected.
+    This will start the server using `nodemon`, which automatically restarts the server when file changes are detected. If Redis is unavailable the server will log a warning and continue with the in-memory Socket.IO adapter.
+
+## Manual Test Checklist
+
+Run through the following flow before releasing changes:
+
+1. Start the backend with and without Redis running; ensure missing Redis only logs a warning.
+2. Login as two users that follow each other; verify the Messages search only lists followed users.
+3. Open a conversation, send a message, and confirm the counterpart receives it in real time.
+4. Refresh the browser and confirm ciphertext persisted and decrypts correctly on load.
+5. Attempt to hit the messaging endpoints without a token and confirm a 401 response.
+6. Disconnect one user and ensure `user:offline` events fire without console spam.
 
 ## Connecting to Frontend
 

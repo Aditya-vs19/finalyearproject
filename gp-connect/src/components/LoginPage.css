@@ -24,6 +24,24 @@ body{
   box-shadow: 0 0 20px rgba(255, 0, 150, 0.1);
 }
 
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.auth-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #e5e5e5;
+  margin-bottom: 0.35rem;
+}
+
+.auth-field .auth-input {
+  margin-bottom: 0;
+}
+
 .register-card {
   max-width: 500px;
   padding: 2.5rem;
@@ -67,6 +85,10 @@ body{
   border: 1px solid #ffffff;
   box-shadow: 0 0 10px rgba(255,255,255,0.2);
 }
+.auth-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .auth-input-error {
   border: 1px solid #ff6b6b !important;
   background: rgba(255, 107, 107, 0.1) !important;
@@ -77,6 +99,10 @@ body{
   margin-top: -0.5rem;
   margin-bottom: 0.5rem;
   text-align: left;
+}
+.auth-helper {
+  font-size: 0.8rem;
+  color: #bbbbbb;
 }
 
 .auth-button {
@@ -100,6 +126,11 @@ body{
   margin-top: 1rem;
   font-size: 0.95rem;
   transition: color 0.3s ease;
+}
+
+.auth-footer-text .auth-link-button {
+  margin-top: 0;
+  padding: 0;
 }
 
 .auth-link-button:hover:not(:disabled) {

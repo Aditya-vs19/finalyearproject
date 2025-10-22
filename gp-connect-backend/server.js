@@ -3,26 +3,34 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import jwt from 'jsonwebtoken';
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import communityRoutes from './routes/communityRoutes.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import conversationRoutes from './routes/conversationRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 import initializeCommunities from './utils/initializeCommunities.js';
+import { configureChatSocket } from './socket/chatSocket.js';
 
 // Load environment variables
 dotenv.config();
+
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+  : ['http://localhost:5173', 'http://localhost:5174'];
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
-    methods: ['GET', 'POST']
-  }
+    origin: allowedOrigins,
+    methods: ['GET', 'POST'],
+  },
 });
 
 // Get __dirname for ES Modules
@@ -30,29 +38,36 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Middleware
-app.use(express.json()); // Body parser for JSON data
-app.use(cors({ origin: ['http://localhost:5173', 'http://localhost:5174'] })); // Enable CORS for frontend
+app.use(express.json({ limit: '1mb' }));
+app.use(cors({ origin: allowedOrigins }));
 
 // Serve static files from the 'uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Debug routes (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  const debugRoutes = (await import('./routes/debugRoutes.js')).default;
+  app.use('/api', debugRoutes);
+}
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/conversations', conversationRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Socket.IO connection handling with JWT authentication
 io.use(async (socket, next) => {
   try {
-    const token = socket.handshake.auth.token;
+    const token = socket.handshake.auth?.token;
     if (!token) {
       return next(new Error('Authentication error: No token provided'));
     }
 
     // Verify JWT token
-    const jwt = await import('jsonwebtoken');
-    const decoded = jwt.default.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Attach user ID to socket
     socket.userId = decoded.id;
@@ -98,8 +113,11 @@ io.on('connection', (socket) => {
   });
 });
 
-// Make io available to routes
-app.set('io', io);
+try {
+  await configureChatSocket({ io, app });
+} catch (error) {
+  console.error('[socket] Failed to initialize chat namespace:', error.message);
+}
 
 // Error Handling Middleware
 app.use(notFound);

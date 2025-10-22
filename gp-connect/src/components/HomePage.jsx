@@ -22,6 +22,7 @@ export default function HomePage({ onLogout }) {
   const [topSearchResults, setTopSearchResults] = useState([]);
   const [showTopSearchDropdown, setShowTopSearchDropdown] = useState(false);
   const [isTopSearching, setIsTopSearching] = useState(false);
+  const [pendingChatUserId, setPendingChatUserId] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 700);
@@ -151,6 +152,19 @@ export default function HomePage({ onLogout }) {
   const handleNavigateToMyProfile = () => {
     setViewingUserProfile(null);
     setActiveTab('profile');
+  };
+
+  const openMessages = (userId = null) => {
+    setPendingChatUserId(userId);
+    setShowMessages(true);
+    setActiveTab('messages');
+  };
+
+  const handleStartChatFromProfile = (userId) => {
+    if (!userId) {
+      return;
+    }
+    openMessages(userId);
   };
 
   // Search component for mobile
@@ -449,7 +463,11 @@ export default function HomePage({ onLogout }) {
           <button className="icon-btn" onClick={() => setActiveTab('notifications')} title="Notifications">
             <FaBell />
           </button>
-          <button className="icon-btn" onClick={() => setShowMessages(true)} title="Messages">
+          <button
+            className="icon-btn"
+            onClick={() => openMessages()}
+            title="Messages"
+          >
             <FaEnvelope />
           </button>
         </div>
@@ -464,7 +482,10 @@ export default function HomePage({ onLogout }) {
               <button className={`sidebar-tab${activeTab === 'communities' ? ' active' : ''}`} onClick={() => setActiveTab('communities')}>
                 <FaUsers className="sidebar-icon" /> <span>Communities</span>
               </button>
-              <button className={`sidebar-tab${activeTab === 'messages' ? ' active' : ''}`} onClick={() => setShowMessages(true)}>
+              <button
+                className={`sidebar-tab${activeTab === 'messages' ? ' active' : ''}`}
+                onClick={() => openMessages()}
+              >
                 <FaEnvelope className="sidebar-icon" /> <span>Messages</span>
               </button>
               <button className={`sidebar-tab${activeTab === 'create' ? ' active' : ''}`} onClick={() => setActiveTab('create')}>
@@ -482,10 +503,11 @@ export default function HomePage({ onLogout }) {
         <div className={`feed-col`}>
           {activeTab === 'home' && <Feed onNavigateToProfile={handleNavigateToProfile} />}
           {activeTab === 'profile' && !showSettings && (
-            <ProfilePage 
-              userProfile={viewingUserProfile} 
-              onBackToHome={handleBackToHome} 
+            <ProfilePage
+              userProfile={viewingUserProfile}
+              onBackToHome={handleBackToHome}
               onNavigateToSettings={() => setShowSettings(true)}
+              onStartChat={handleStartChatFromProfile}
               isMobile={isMobile}
             />
           )}
@@ -506,8 +528,25 @@ export default function HomePage({ onLogout }) {
         {/* Overlay for messages */}
         {showMessages && (
           <div className={`messages-overlay${isMobile ? ' mobile' : ''}`}>
-            <button className="close-messages-btn" onClick={() => setShowMessages(false)} title="Close">&times;</button>
-            <MessagePanel />
+            <button
+              className="close-messages-btn"
+              onClick={() => {
+                setShowMessages(false);
+                setPendingChatUserId(null);
+              }}
+              title="Close"
+            >
+              &times;
+            </button>
+            {currentUser ? (
+              <MessagePanel
+                currentUser={currentUser}
+                initialParticipantId={pendingChatUserId}
+                onConversationOpened={() => setPendingChatUserId(null)}
+              />
+            ) : (
+              <div className="messages-loading">Loading chat…</div>
+            )}
           </div>
         )}
       </div>

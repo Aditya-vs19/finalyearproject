@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+const defaultBaseUrl = 'http://localhost:5000/api';
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || defaultBaseUrl;
+
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: apiBaseUrl,
   timeout: 10000,
 });
 
@@ -40,6 +43,7 @@ export const authAPI = {
 
 export const profileAPI = {
   getCurrentUserProfile: () => API.get('/profile/me'),
+  getFollowingList: () => API.get('/profile/me/following'),
   getUserProfile: (userId) => API.get(`/profile/${userId}`),
   updateProfile: (userId, data) => API.put(`/profile/${userId}`, data),
   uploadProfilePicture: (userId, formData) => API.post(`/profile/${userId}/upload`, formData, {
@@ -74,8 +78,11 @@ export const communitiesAPI = {
   sendMessage: (communityId, content) => API.post(`/community/${communityId}/messages`, { content }),
 };
 
-export const messagesAPI = {
-  getConversations: () => API.get('/messages/conversations/'),
+export const chatAPI = {
+  listConversations: () => API.get('/conversations'),
+  getConversationWithUser: (userId) => API.get(`/conversations/${userId}`),
+  getMessages: (conversationId) => API.get(`/messages/${conversationId}`),
+  sendMessage: (conversationId, payload) => API.post(`/messages/${conversationId}`, payload),
 };
 
 export const notificationsAPI = {

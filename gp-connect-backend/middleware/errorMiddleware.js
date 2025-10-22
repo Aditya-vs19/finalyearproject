@@ -5,7 +5,13 @@ const notFound = (req, res, next) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  const statusCode = err.statusCode || (res.statusCode === 200 ? 500 : res.statusCode);
+  if (process.env.NODE_ENV !== 'test') {
+    console.error(
+      `[${new Date().toISOString()}] ${req.method} ${req.originalUrl} -> ${statusCode}: ${err.message}`,
+      err.stack
+    );
+  }
   res.status(statusCode);
   res.json({
     message: err.message,

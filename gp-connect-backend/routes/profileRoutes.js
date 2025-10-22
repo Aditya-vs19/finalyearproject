@@ -1,22 +1,24 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
-import { 
-  getUserProfile, 
-  updateUserProfile, 
-  uploadProfilePicture, 
-  changePassword, 
+import {
+  getUserProfile,
+  updateUserProfile,
+  uploadProfilePicture,
+  changePassword,
   getCurrentUserProfile,
+  getFollowingList,
   followUser,
   unfollowUser,
   searchUsers,
   testUsers,
-  upload
+  upload,
 } from '../controllers/profileController.js';
 
 const router = express.Router();
 
 // Get current user profile
 router.get('/me', protect, getCurrentUserProfile);
+router.get('/me/following', protect, getFollowingList);
 
 // Search users (must be before /:id route)
 router.get('/search', protect, searchUsers);

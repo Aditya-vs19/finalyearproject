@@ -7,10 +7,11 @@ import {
 	resendPasswordOtp,
 	verifyPasswordOtpLogin,
 } from '../controllers/authController.js';
+import { validateRegistrationInput } from '../middleware/registrationValidation.js';
 
 const router = express.Router();
 
-router.post('/register', registerUser);
+router.post('/register', validateRegistrationInput, registerUser);
 router.post('/verify', verifyOtp);
 router.post('/login', authUser);
 router.post('/forgot-password', forgotPasswordOtp);

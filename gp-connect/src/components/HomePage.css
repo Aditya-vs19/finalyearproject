@@ -77,6 +77,7 @@ body {
   font-weight: 800;
   font-family: 'Dancing Script', cursive;
   background: linear-gradient(90deg, #ffffff, #ffffff);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 0.04em;
@@ -345,6 +346,7 @@ body {
     margin: 0;
     font-family: 'Dancing Script', cursive;
     background: linear-gradient(90deg, #ffffff, #ffffff);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     flex-shrink: 0;
@@ -686,6 +688,11 @@ body {
   justify-content: center;
   padding: 2.5rem 0;
   animation: fadeIn 0.2s;
+.messages-loading {
+  color: #ffffff;
+  font-size: 1rem;
+  padding: 2rem;
+}
 }
 @keyframes fadeIn {
   from { opacity: 0; }

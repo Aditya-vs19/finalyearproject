@@ -70,7 +70,8 @@ const getUserProfile = asyncHandler(async (req, res) => {
         totalPosts,
         totalFollowers,
         totalFollowing
-      }
+      },
+      canMessage: isFollowing,
     },
     posts,
     isFollowing
@@ -226,11 +227,31 @@ const getCurrentUserProfile = asyncHandler(async (req, res) => {
   });
 });
 
+const getFollowingList = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+    .populate('following', 'fullName profilePic enrollment department');
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const formatted = (user.following || []).map((follow) => ({
+    _id: follow._id,
+    fullName: follow.fullName,
+    profilePic: follow.profilePic || null,
+    enrollment: follow.enrollment || '',
+    department: follow.department || '',
+  }));
+
+  res.json(formatted);
+});
+
 // @desc    Search users by name or enrollment
 // @route   GET /api/profile/search?query=...
 // @access  Private
 const searchUsers = asyncHandler(async (req, res) => {
-  const query = req.query.query;
+  const query = req.query.query || req.query.q;
   
   if (!query || query.trim().length < 2) {
     res.status(400);
@@ -255,10 +276,14 @@ const searchUsers = asyncHandler(async (req, res) => {
   const currentUser = await User.findById(req.user._id).select('following');
   const followingIds = currentUser.following.map(id => id.toString());
 
-  const usersWithFollowStatus = users.map(user => ({
-    ...user.toObject(),
-    isFollowing: followingIds.includes(user._id.toString())
-  }));
+  const usersWithFollowStatus = users.map(user => {
+    const isFollowing = followingIds.includes(user._id.toString());
+    return {
+      ...user.toObject(),
+      isFollowing,
+      canMessage: isFollowing,
+    };
+  });
 
   res.json(usersWithFollowStatus);
 });
@@ -313,7 +338,8 @@ const followUser = asyncHandler(async (req, res) => {
 
   res.json({
     message: 'Successfully followed user',
-    isFollowing: true
+    isFollowing: true,
+    canMessage: true
   });
 });
 
@@ -350,7 +376,8 @@ const unfollowUser = asyncHandler(async (req, res) => {
 
   res.json({
     message: 'Successfully unfollowed user',
-    isFollowing: false
+    isFollowing: false,
+    canMessage: false
   });
 });
 
@@ -361,6 +388,7 @@ export {
   uploadProfilePicture, 
   changePassword, 
   getCurrentUserProfile,
+  getFollowingList,
   searchUsers,
   followUser,
   unfollowUser,

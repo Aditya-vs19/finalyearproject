@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FaUser, FaEdit, FaCog, FaArrowLeft, FaEnvelope, FaGraduationCap, FaBuilding, FaCalendarAlt, FaSave, FaTimes } from 'react-icons/fa';
-import { profileAPI, postsAPI } from '../services/api';
+import { FaEdit, FaArrowLeft, FaEnvelope, FaBuilding, FaCalendarAlt, FaSave, FaTimes } from 'react-icons/fa';
+import { profileAPI } from '../services/api';
 import { getProfilePicUrl, getPostImageUrl, handleImageError } from '../utils/imageUtils.js';
 import './ProfilePage.css';
 
-const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile }) => {
+const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, onStartChat, isMobile }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,33 +26,34 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
   });
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [viewedUser, setViewedUser] = useState(userProfile || null);
+  const [canMessageTarget, setCanMessageTarget] = useState(!!userProfile?.canMessage);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        let response;
-        
-        // Always fetch current user data first
+        setError(null);
+
         const currentUserResponse = await profileAPI.getCurrentUserProfile();
         const loggedInUser = currentUserResponse.data.user;
-        
-        if (userProfile) {
-          // Fetching another user's profile
-          response = await profileAPI.getUserProfile(userProfile._id);
+        setCurrentUser(loggedInUser);
+
+        if (userProfile && userProfile._id !== loggedInUser._id) {
+          const response = await profileAPI.getUserProfile(userProfile._id);
           const otherUser = response.data.user;
-          setCurrentUser(loggedInUser); // Keep current user data
+          setViewedUser(otherUser);
+          setCanMessageTarget(!!otherUser?.canMessage);
           setUserPosts(response.data.posts);
           setUserStats(otherUser.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
           setIsFollowing(response.data.isFollowing || false);
+          setProfilePicPreview(null);
         } else {
-          // Fetching current user's profile
-          setCurrentUser(loggedInUser);
+          setViewedUser(loggedInUser);
+          setCanMessageTarget(false);
           setUserPosts(currentUserResponse.data.posts);
           setUserStats(loggedInUser.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
-          setIsFollowing(false); // Current user can't follow themselves
-          
-          // Set form data for editing (only for current user)
+          setIsFollowing(false);
           setFormData({
             fullName: loggedInUser.fullName || '',
             bio: loggedInUser.bio || '',
@@ -61,7 +62,7 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
           setProfilePicPreview(getProfilePicUrl(loggedInUser.profilePic));
         }
       } catch (err) {
-        setError(err.message);
+        setError(err.message || 'Failed to load profile');
       } finally {
         setLoading(false);
       }
@@ -70,9 +71,8 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
     fetchUserData();
   }, [userProfile]);
 
-  // Determine if viewing own profile
-  const isOwnProfile = !userProfile || (currentUser && userProfile && currentUser._id === userProfile._id);
-  const displayUser = userProfile || currentUser;
+  const displayUser = viewedUser || userProfile || currentUser;
+  const isOwnProfile = !userProfile || (currentUser && displayUser && currentUser._id === displayUser._id);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -96,49 +96,40 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!currentUser) return;
     setSaving(true);
     setMessage({ type: '', text: '' });
 
     try {
-      // Update profile data
       await profileAPI.updateProfile(currentUser._id, formData);
 
-      // Upload profile picture if selected
       if (profilePic) {
         const formDataPic = new FormData();
         formDataPic.append('profilePic', profilePic);
         await profileAPI.uploadProfilePicture(currentUser._id, formDataPic);
       }
 
+      const updatedResponse = await profileAPI.getCurrentUserProfile();
+      const updatedUser = updatedResponse.data.user;
+
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setIsEditing(false);
-      
-      // Update current user state without reloading
-      const updatedResponse = await profileAPI.getCurrentUserProfile();
-      setCurrentUser(updatedResponse.data.user);
+      setCurrentUser(updatedUser);
+      setViewedUser(updatedUser);
+      setCanMessageTarget(false);
       setUserPosts(updatedResponse.data.posts);
-      setUserStats(updatedResponse.data.user.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
-      
-      // Update profile picture preview with the new URL
-      if (updatedResponse.data.user.profilePic) {
-        setProfilePicPreview(getProfilePicUrl(updatedResponse.data.user.profilePic));
-      } else {
-        setProfilePicPreview(null);
-      }
-      
-      // Update form data with new values
+      setUserStats(updatedUser.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
+      setProfilePicPreview(updatedUser.profilePic ? getProfilePicUrl(updatedUser.profilePic) : null);
       setFormData({
-        fullName: updatedResponse.data.user.fullName || '',
-        bio: updatedResponse.data.user.bio || '',
-        department: updatedResponse.data.user.department || '',
+        fullName: updatedUser.fullName || '',
+        bio: updatedUser.bio || '',
+        department: updatedUser.department || '',
       });
-      
-      // Clear the selected file
       setProfilePic(null);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to update profile' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to update profile. Please try again.',
       });
     } finally {
       setSaving(false);
@@ -146,28 +137,32 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
   };
 
   const handleFollowToggle = async () => {
-    if (isOwnProfile || !userProfile) return;
-    
+    if (isOwnProfile || !userProfile?._id) return;
+
     setIsFollowLoading(true);
     try {
       if (isFollowing) {
-        await profileAPI.unfollowUser(userProfile._id);
+        const response = await profileAPI.unfollowUser(userProfile._id);
         setIsFollowing(false);
+        setCanMessageTarget(!!response.data?.canMessage);
+        setViewedUser(prev => (prev ? { ...prev, canMessage: !!response.data?.canMessage } : prev));
         setUserStats(prev => ({
           ...prev,
-          totalFollowers: prev.totalFollowers - 1
+          totalFollowers: Math.max(0, prev.totalFollowers - 1),
         }));
       } else {
-        await profileAPI.followUser(userProfile._id);
+        const response = await profileAPI.followUser(userProfile._id);
         setIsFollowing(true);
+        setCanMessageTarget(!!response.data?.canMessage);
+        setViewedUser(prev => (prev ? { ...prev, canMessage: !!response.data?.canMessage } : prev));
         setUserStats(prev => ({
           ...prev,
-          totalFollowers: prev.totalFollowers + 1
+          totalFollowers: prev.totalFollowers + 1,
         }));
       }
     } catch (error) {
       console.error('Follow/unfollow error:', error);
-      setMessage({ type: 'error', text: 'Failed to update follow status. Please try again.' });
+      setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to update follow status. Please try again.' });
     } finally {
       setIsFollowLoading(false);
     }
@@ -229,8 +224,8 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
             <div className="profile-picture-container">
               <img
                 src={profilePicPreview || getProfilePicUrl(displayUser?.profilePic)}
-                alt="Profile"
-                className="profile-picture"
+        alt="Profile"
+        className="profile-picture"
                 onError={(e) => handleImageError(e, '/default-avatar.svg')}
               />
               {isOwnProfile && isEditing && (
@@ -278,7 +273,7 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
               </div>
             </div>
             {isOwnProfile && !isEditing && (
-              <button 
+              <button
                 className="edit-profile-btn"
                 onClick={() => setIsEditing(true)}
               >
@@ -286,13 +281,24 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, isMobile
               </button>
             )}
             {!isOwnProfile && userProfile && (
-              <button 
-                className={`follow-profile-btn ${isFollowing ? 'following' : 'follow'}`}
-                onClick={handleFollowToggle}
-                disabled={isFollowLoading}
-              >
-                {isFollowLoading ? 'Updating...' : (isFollowing ? 'Following' : 'Follow')}
-              </button>
+              <div className="profile-action-buttons">
+                <button
+                  className={`follow-profile-btn ${isFollowing ? 'following' : 'follow'}`}
+                  onClick={handleFollowToggle}
+                  disabled={isFollowLoading}
+                >
+                  {isFollowLoading ? 'Updating...' : (isFollowing ? 'Following' : 'Follow')}
+                </button>
+                {canMessageTarget && (
+                  <button
+                    className="message-profile-btn"
+                    onClick={() => onStartChat && onStartChat(displayUser?._id || userProfile._id)}
+                    disabled={!onStartChat}
+                  >
+                    <FaEnvelope /> Message
+                  </button>
+                )}
+              </div>
             )}
           </div>
 

@@ -1,11 +1,32 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+const departmentEnum = [
+  'Civil Engineering',
+  'Electrical Engineering',
+  'Electronics and Telecommunications Engineering',
+  'Mechanical Engineering',
+  'Metallurgy Engineering',
+  'Computer Engineering',
+  'IT Engineering',
+  'Dress Design and Garment Manufacturing Engineering',
+  'Computer',
+  'Mechanical',
+  'Civil',
+  'Metallurgy',
+  'IT',
+  'Electrical',
+  'ENTC',
+  'DDGM',
+  'Meta',
+];
+
 const userSchema = mongoose.Schema(
   {
     fullName: {
       type: String,
       required: true,
+      trim: true,
     },
     email: {
       type: String,
@@ -34,7 +55,19 @@ const userSchema = mongoose.Schema(
     department: {
       type: String,
       required: true,
-      enum: ['Computer', 'Mechanical', 'Civil', 'Metallurgy', 'IT', 'Electrical', 'ENTC', 'DDGM', 'Meta'],
+      enum: departmentEnum,
+      trim: true,
+    },
+    departmentCode: {
+      type: String,
+      minlength: 2,
+      maxlength: 2,
+      trim: true,
+    },
+    admissionYear: {
+      type: Number,
+      min: 2010,
+      max: 2025,
     },
     isVerified: {
       type: Boolean,
@@ -54,6 +87,25 @@ const userSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
     }],
+    chatIdentityPublicKey: {
+      type: String,
+    },
+    chatDhPublicKey: {
+      type: String,
+    },
+    chatPrekeyBatchId: {
+      type: String,
+    },
+    chatPrekeysPublishedAt: {
+      type: Date,
+    },
+    onlineStatus: {
+      type: Boolean,
+      default: false,
+    },
+    lastSeen: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
