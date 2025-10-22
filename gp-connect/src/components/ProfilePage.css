@@ -1,6 +1,6 @@
-/* Profile Page Styles - Matching Home/Create/Community Design */
+/* Profile Page Styles - Matching Blue Eclipse Theme */
 .profile-page {
-  background: #000000;
+  background: var(--bg-primary);
   min-height: 100vh;
   padding: 2rem;
   display: flex;
@@ -9,13 +9,14 @@
 }
 
 .profile-content {
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 24px;
-  padding: 2.5rem;
+  background: var(--settings-card-bg);
+  backdrop-filter: blur(20px);
+  border-radius: var(--settings-border-radius);
+  padding: 3rem 4rem;
   width: 100%;
-  max-width: 800px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 1px solid #333333;
+  max-width: 1200px;
+  box-shadow: var(--settings-card-shadow);
+  border: 1px solid var(--settings-card-border);
 }
 
 .profile-header {
@@ -26,9 +27,10 @@
 }
 
 .mobile-back-btn {
-  background: #000000;
-  border: 1px solid #333;
-  color: #ffffff;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
   padding: 0.8rem;
   border-radius: 50%;
   cursor: pointer;
@@ -37,18 +39,18 @@
 }
 
 .mobile-back-btn:hover {
-  background: #000000;
-  border-color: #ffffff;
-  color: #ffffff;
-  box-shadow: 0 0 15px rgba(255,255,255,0.3);
+  background: var(--glass-bg-hover);
+  border-color: var(--border-accent);
+  color: var(--text-primary);
+  box-shadow: var(--subtle-glow);
 }
 
 .profile-title {
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 2.5rem;
   font-weight: 700;
   margin: 0;
-  background: linear-gradient(90deg, #ffffff, #ffffff);
+  background: linear-gradient(45deg, var(--text-primary), var(--text-accent));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -65,7 +67,7 @@
   align-items: flex-start;
   gap: 2rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid #333333;
+  border-bottom: 1px solid var(--border-white-subtle);
 }
 
 .profile-picture-container {
@@ -78,8 +80,8 @@
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #333333;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  border: 4px solid var(--border-primary);
+  box-shadow: var(--eclipse-glow);
 }
 
 .profile-pic-upload {
@@ -89,9 +91,9 @@
 }
 
 .upload-btn {
-  background: #000000;
-  color: #ffffff;
-  border: 1px solid #333;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-secondary);
   padding: 8px 12px;
   border-radius: 20px;
   cursor: pointer;
@@ -100,10 +102,10 @@
 }
 
 .upload-btn:hover {
-  background: #000000;
-  border-color: #ffffff;
-  color: #ffffff;
-  box-shadow: 0 0 15px rgba(255,255,255,0.3);
+  background: var(--glass-bg-hover);
+  border-color: var(--border-accent);
+  color: var(--text-primary);
+  box-shadow: var(--subtle-glow);
 }
 
 .profile-basic-info {
@@ -113,13 +115,13 @@
 .profile-basic-info h3 {
   margin: 0 0 1rem 0;
   font-size: 2rem;
-  color: #ffffff;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .enrollment, .email, .department, .join-date {
   margin: 0.5rem 0;
-  color: #cccccc;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -131,7 +133,7 @@
   gap: 2rem;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #333333;
+  border-top: 1px solid var(--border-white-subtle);
 }
 
 .stat-item {
@@ -144,27 +146,27 @@
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   line-height: 1;
 }
 
 .stat-label {
   font-size: 0.9rem;
-  color: #cccccc;
+  color: var(--text-secondary);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .department {
-  color: #ffffff;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .edit-profile-btn {
-  background: #000000;
-  color: #ffffff;
-  border: 1px solid #333;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-secondary);
   padding: 12px 24px;
   border-radius: 12px;
   cursor: pointer;
@@ -177,10 +179,10 @@
 }
 
 .edit-profile-btn:hover {
-  background: #000000;
-  border-color: #ffffff;
-  color: #ffffff;
-  box-shadow: 0 0 15px rgba(255,255,255,0.3);
+  background: var(--glass-bg-hover);
+  border-color: var(--border-accent);
+  color: var(--text-primary);
+  box-shadow: var(--subtle-glow);
 }
 
 .profile-action-buttons {
@@ -191,10 +193,11 @@
 }
 
 .profile-edit-form {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--settings-inner-card-bg);
+  backdrop-filter: blur(10px);
   padding: 2rem;
-  border-radius: 16px;
-  border: 1px solid #333333;
+  border-radius: var(--settings-inner-radius);
+  border: 1px solid var(--settings-inner-card-border);
 }
 
 .form-group {
@@ -205,7 +208,7 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1rem;
 }
 
@@ -214,11 +217,11 @@
 .form-group select {
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid #333333;
+  border: 2px solid var(--border-secondary);
   border-radius: 12px;
   font-size: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
+  background: var(--glass-bg);
+  color: var(--text-primary);
   transition: all 0.3s ease;
   font-family: inherit;
 }
@@ -227,9 +230,9 @@
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 15px rgba(255,255,255,0.2);
+  border-color: var(--border-accent);
+  background: var(--glass-bg-hover);
+  box-shadow: var(--subtle-glow);
 }
 
 .form-group textarea {
@@ -258,27 +261,28 @@
 }
 
 .btn-primary {
-  background: #000000;
-  color: #ffffff;
-  border: 1px solid #333;
+  background: var(--primary-gradient);
+  color: var(--text-primary);
+  border: none;
+  box-shadow: var(--primary-glow);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #000000;
-  border-color: #ffffff;
-  color: #ffffff;
-  box-shadow: 0 0 15px rgba(255,255,255,0.3);
+  background: var(--secondary-gradient);
+  color: var(--text-primary);
+  box-shadow: var(--primary-glow-hover);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  border: 1px solid #333333;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-secondary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #ffffff;
+  background: var(--glass-bg-hover);
+  border-color: var(--border-accent);
 }
 
 .btn:disabled {
@@ -311,12 +315,12 @@
 
 .bio-section h4 {
   margin-bottom: 0.5rem;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1.2rem;
 }
 
 .bio-section p {
-  color: #cccccc;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
 }
@@ -324,11 +328,11 @@
 .posts-section {
   margin-top: 2rem;
   padding-top: 2rem;
-  border-top: 1px solid #333333;
+  border-top: 1px solid var(--border-white-subtle);
 }
 
 .posts-section h4 {
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
   font-weight: 700;
@@ -337,7 +341,7 @@
 .no-posts {
   text-align: center;
   padding: 3rem;
-  color: #888888;
+  color: var(--text-muted);
   font-size: 1.1rem;
 }
 
@@ -348,17 +352,17 @@
 }
 
 .post-item {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid #333333;
-  border-radius: 16px;
+  background: var(--chat-bubble-bg);
+  border: 1px solid var(--chat-border-light);
+  border-radius: var(--settings-inner-radius);
   padding: 1.5rem;
   transition: all 0.3s ease;
 }
 
 .post-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #ffffff;
-  box-shadow: 0 0 15px rgba(255,255,255,0.1);
+  background: var(--chat-input-bg);
+  border-color: var(--chat-border-light);
+  transform: translateY(-1px);
 }
 
 .post-header {
@@ -414,14 +418,14 @@
 .loading-container {
   text-align: center;
   padding: 3rem;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #333333;
-  border-top: 4px solid #ffffff;
+  border: 4px solid var(--border-secondary);
+  border-top: 4px solid var(--primary-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 20px;
@@ -435,18 +439,19 @@
 .error-container {
   text-align: center;
   padding: 3rem;
-  color: #dc3545;
+  color: var(--error-color);
 }
 
 /* Mobile responsive */
 @media (max-width: 700px) {
   .profile-page {
-    padding: 1rem;
+    padding: 0.5rem;
   }
   
   .profile-content {
     padding: 1.5rem;
     border-radius: 16px;
+    max-width: 100%;
   }
   
   .profile-title {
@@ -490,7 +495,7 @@
 
 /* Follow Button Styles */
 .follow-profile-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5C8DC5 0%, #909EAE 100%);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -527,9 +532,9 @@
 }
 
 .message-profile-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--settings-inner-card-bg);
   color: #ffffff;
-  border: 1px solid #444444;
+  border: 1px solid var(--settings-card-border);
   padding: 0.75rem 1.5rem;
   border-radius: 25px;
   font-size: 1rem;

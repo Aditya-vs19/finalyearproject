@@ -14,6 +14,7 @@ import profileRoutes from './routes/profileRoutes.js';
 import communityRoutes from './routes/communityRoutes.js';
 import conversationRoutes from './routes/conversationRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import initializeCommunities from './utils/initializeCommunities.js';
 import { configureChatSocket } from './socket/chatSocket.js';
 
@@ -22,14 +23,16 @@ dotenv.config();
 
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
-  : ['http://localhost:5173', 'http://localhost:5174'];
+  : ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'];
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
   },
 });
 
@@ -39,9 +42,13 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(express.json({ limit: '1mb' }));
-app.use(cors({ origin: allowedOrigins }));
+app.use(cors({ 
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
-// Serve static files from the 'uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Debug routes (only in development)
@@ -50,6 +57,12 @@ if (process.env.NODE_ENV !== 'production') {
   app.use('/api', debugRoutes);
 }
 
+// Make io available to routes via middleware
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
@@ -57,6 +70,8 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/notifications', notificationRoutes);
+
 
 // Socket.IO connection handling with JWT authentication
 io.use(async (socket, next) => {
@@ -80,6 +95,9 @@ io.use(async (socket, next) => {
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id, 'User ID:', socket.userId);
 
+  // Join user's personal room for direct notifications
+  socket.join(`user_${socket.userId}`);
+
   // Join community room
   socket.on('joinCommunity', (data) => {
     const { communityId } = data;
@@ -93,6 +111,8 @@ io.on('connection', (socket) => {
     socket.leave(`community_${communityId}`);
     console.log(`User ${socket.userId} left community ${communityId}`);
   });
+
+
 
   // Handle post like updates
   socket.on('post-like', (data) => {

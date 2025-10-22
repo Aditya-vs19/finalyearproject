@@ -22,6 +22,9 @@ const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      tls: {
+        rejectUnauthorized: false // This fixes the SSL certificate issue
+      }
     });
 
     // Email options

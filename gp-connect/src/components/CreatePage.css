@@ -1,5 +1,5 @@
 .create-page {
-  background: #000000;
+  background: #0f172a;
   min-height: 100vh;
   padding: 2rem;
   display: flex;
@@ -8,13 +8,35 @@
 }
 
 .create-container {
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  border-radius: var(--settings-border-radius, 20px);
   padding: 2.5rem;
   width: 100%;
   max-width: 600px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 1px solid #333333;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(92, 141, 197, 0.1);
+  border: 1px solid rgba(92, 141, 197, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.create-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(92, 141, 197, 0.6), rgba(144, 158, 174, 0.6), transparent);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.create-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(92, 141, 197, 0.3);
 }
 
 .create-header {
@@ -27,9 +49,12 @@
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  background: linear-gradient(90deg, #ffffff, #ffffff);
+  background: linear-gradient(45deg, #5C8DC5, #909EAE, #cbd5e1, #94a3b8);
+  background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientText 4s ease-in-out infinite;
 }
 
 .create-header p {
@@ -51,21 +76,27 @@
 .post-textarea {
   width: 100%;
   min-height: 120px;
-  padding: 1rem;
-  border: 2px solid #333333;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 1.2rem;
+  border: 1px solid rgba(92, 141, 197, 0.2);
+  border-radius: var(--settings-border-radius, 20px);
+  background: rgba(51, 65, 85, 0.8);
+  backdrop-filter: blur(10px);
   color: #ffffff;
   font-size: 1.1rem;
   font-family: inherit;
   resize: vertical;
-  transition: border-color 0.3s ease, background 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .post-textarea:focus {
   outline: none;
-  border-color: #a2fd05;
-  background: rgba(255, 255, 255, 0.08);
+  border-color: #5C8DC5;
+  background: rgba(51, 65, 85, 0.9);
+  box-shadow: 
+    0 0 0 3px rgba(92, 141, 197, 0.2),
+    0 8px 25px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
 }
 
 .post-textarea::placeholder {
@@ -82,10 +113,10 @@
 
 .image-preview-section {
   position: relative;
-  border-radius: 16px;
+  border-radius: var(--settings-border-radius, 20px);
   overflow: hidden;
-  background: #1a1a1a;
-  border: 2px solid #333333;
+  background: rgba(51, 65, 85, 0.8);
+  border: 1px solid rgba(92, 141, 197, 0.2);
 }
 
 .image-preview {
@@ -135,22 +166,43 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.7rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid #333333;
-  border-radius: 12px;
-  color: #ffffff;
+  padding: 0.8rem 1.2rem;
+  background: rgba(51, 65, 85, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(92, 141, 197, 0.2);
+  border-radius: var(--settings-border-radius, 20px);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
 
 .action-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: #ffffff;
+  background: linear-gradient(135deg, #5C8DC5 0%, #909EAE 100%);
+  border-color: rgba(92, 141, 197, 0.4);
   color: #ffffff;
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(255,255,255,0.2);
+  transform: translateY(-3px);
+  box-shadow: 
+    0 8px 25px rgba(92, 141, 197, 0.4),
+    0 0 20px rgba(92, 141, 197, 0.2);
+}
+
+.action-btn:hover::before {
+  left: 100%;
 }
 
 .action-btn svg {
@@ -164,9 +216,9 @@
 
 .privacy-select {
   padding: 0.7rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid #333333;
-  border-radius: 12px;
+  background: rgba(51, 65, 85, 0.8);
+  border: 1px solid rgba(92, 141, 197, 0.2);
+  border-radius: var(--settings-border-radius, 20px);
   color: #ffffff;
   font-size: 0.95rem;
   cursor: pointer;
@@ -175,12 +227,13 @@
 
 .privacy-select:focus {
   outline: none;
-  border-color: #a2fd05;
-  background: rgba(255, 255, 255, 0.08);
+  border-color: #5C8DC5;
+  background: rgba(51, 65, 85, 0.9);
+  box-shadow: 0 0 0 3px rgba(92, 141, 197, 0.2);
 }
 
 .privacy-select option {
-  background: #1a1a1a;
+  background: #0f172a;
   color: #ffffff;
 }
 
@@ -191,28 +244,44 @@
 }
 
 .post-btn {
-  background: #000000;
+  background: linear-gradient(135deg, #5C8DC5 0%, #909EAE 100%);
   color: #ffffff;
-  border: 1px solid #333;
+  border: none;
   border-radius: 16px;
-  padding: 1rem 3rem;
+  padding: 1.2rem 3rem;
   font-size: 1.2rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 150px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 180px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.post-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
 }
 
 .post-btn:hover:not(.disabled) {
-  background: #000000;
-  color: #ffffff;
-  border-color: #ffffff;
-  transform: translateY(-3px);
-  box-shadow: 0 0 20px rgba(255,255,255,0.3);
+  background: linear-gradient(135deg, #909EAE 0%, #5C8DC5 100%);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.post-btn:hover:not(.disabled)::before {
+  left: 100%;
 }
 
 .post-btn.disabled {
-  background: #333333;
+  background: rgba(51, 65, 85, 0.5);
   color: #666;
   cursor: not-allowed;
   transform: none;
@@ -222,9 +291,9 @@
 .create-tips {
   margin-top: 2rem;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
+  background: rgba(51, 65, 85, 0.8);
+  border: 1px solid rgba(92, 141, 197, 0.2);
+  border-radius: var(--settings-border-radius, 20px);
 }
 
 .create-tips h4 {

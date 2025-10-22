@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import Post from '../models/Post.js';
 import User from '../models/User.js';
+import { createNotification } from './notificationController.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -151,6 +152,17 @@ const toggleLike = asyncHandler(async (req, res) => {
     // Like the post
     post.likes.push(userId);
     post.likesCount += 1;
+    
+    // Create notification for post owner (if not liking own post)
+    if (post.userId.toString() !== userId.toString()) {
+      await createNotification(
+        post.userId,
+        userId,
+        'like',
+        'liked your post',
+        post._id
+      );
+    }
   }
 
   await post.save();
@@ -220,6 +232,18 @@ const addComment = asyncHandler(async (req, res) => {
   post.commentsCount += 1;
   
   await post.save();
+  
+  // Create notification for post owner (if not commenting on own post)
+  if (post.userId.toString() !== userId.toString()) {
+    await createNotification(
+      post.userId,
+      userId,
+      'comment',
+      `commented: "${text.length > 30 ? text.substring(0, 30) + '...' : text}"`,
+      post._id,
+      newComment._id
+    );
+  }
   
   // Populate the comment with user details
   await post.populate('comments.user', 'fullName profilePic');

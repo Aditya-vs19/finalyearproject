@@ -1,20 +1,25 @@
 .dm-container {
   display: flex;
   width: 100%;
-  min-height: 420px;
-  background: #19191a;
-  border-radius: 18px;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: calc(100vh - 160px);
+  min-height: 600px;
+  background: var(--settings-card-bg);
+  backdrop-filter: blur(20px);
+  border-radius: var(--settings-border-radius);
   overflow: hidden;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--settings-card-shadow);
+  border: 1px solid var(--settings-card-border);
 }
 
 .dm-list {
-  width: 30%;
-  max-width: 280px;
-  min-width: 220px;
-  background: #202024;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1.4rem 1rem;
+  width: 35%;
+  max-width: 400px;
+  min-width: 320px;
+  background: var(--settings-inner-card-bg);
+  border-right: 1px solid var(--settings-card-border);
+  padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -24,13 +29,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .dm-title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   font-weight: 700;
+  background: linear-gradient(45deg, #272757, #505081, #8686AC);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientText 4s ease-in-out infinite;
 }
 
 .dm-connection-status {
@@ -38,25 +49,33 @@
   text-transform: uppercase;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
 }
 
 .dm-connection-status.online {
-  color: #a2fd05;
+  color: #8686AC;
 }
 
 .dm-search {
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-primary);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-secondary);
   border-radius: 12px;
-  padding: 0.35rem 0.8rem;
+  padding: 0.6rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.dm-search:focus-within {
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 3px rgba(39, 39, 87, 0.3);
 }
 
 .dm-search-icon {
-  color: rgba(255, 255, 255, 0.55);
-  margin-right: 0.4rem;
+  color: var(--text-muted);
+  margin-right: 0.6rem;
   display: flex;
   align-items: center;
 }
@@ -65,9 +84,13 @@
   flex: 1;
   background: transparent;
   border: none;
-  color: #fff;
-  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
   outline: none;
+}
+
+.dm-search-input::placeholder {
+  color: var(--text-muted);
 }
 
 .dm-search-results {
@@ -80,29 +103,32 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: none;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
   border-radius: 12px;
-  padding: 0.5rem 0.75rem;
-  color: #fff;
+  padding: 0.7rem 0.9rem;
+  color: var(--text-primary);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .dm-search-result:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--bg-secondary);
+  border-color: var(--border-accent);
+  transform: translateY(-1px);
 }
 
 .dm-search-avatar {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: rgba(162, 253, 5, 0.18);
+  background: var(--primary-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: #a2fd05;
+  color: var(--text-primary);
+  border: 2px solid var(--border-primary);
 }
 
 .dm-search-name {
@@ -128,52 +154,60 @@
 .msg-item {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: 1rem;
   width: 100%;
   border: none;
-  padding: 0.65rem 0.8rem;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  color: #fff;
+  padding: 0.8rem 1rem;
+  border-radius: var(--settings-inner-radius);
+  background: var(--settings-card-bg);
+  border: 1px solid var(--settings-inner-card-border);
+  color: var(--text-primary);
   text-align: left;
   cursor: pointer;
-  transition: background 0.18s ease, transform 0.18s ease;
+  transition: all 0.3s ease;
 }
 
 .msg-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--settings-inner-card-bg);
+  border-color: var(--settings-card-border);
+  transform: translateY(-1px);
 }
 
 .msg-item.selected {
-  background: rgba(162, 253, 5, 0.18);
-  transform: translateX(4px);
+  background: var(--primary-gradient);
+  border-color: var(--accent-color);
+  transform: translateX(8px);
+  box-shadow: var(--primary-glow);
 }
 
 .msg-avatar {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--primary-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
+  color: var(--text-primary);
+  border: 2px solid var(--border-primary);
 }
 
 .msg-presence {
   position: absolute;
   right: -2px;
   bottom: -2px;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  border: 2px solid #202024;
-  background: rgba(255, 255, 255, 0.35);
+  border: 2px solid var(--bg-secondary);
+  background: var(--text-muted);
 }
 
 .msg-presence.online {
-  background: #a2fd05;
+  background: #8686AC;
+  box-shadow: 0 0 8px rgba(134, 134, 172, 0.5);
 }
 
 .msg-content {
@@ -183,15 +217,15 @@
 
 .msg-name {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .msg-preview {
-  margin: 0.25rem 0 0 0;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.6);
+  margin: 0.3rem 0 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -202,7 +236,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #18181b;
+  background: var(--chat-main-bg);
+  backdrop-filter: blur(20px);
 }
 
 .dm-error-banner {
@@ -256,9 +291,10 @@
 }
 
 .dm-chat-header {
-  padding: 1.1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(0, 0, 0, 0.45);
+  padding: 1.2rem 1.8rem;
+  border-bottom: 1px solid var(--settings-card-border);
+  background: var(--settings-inner-card-bg);
+  backdrop-filter: blur(20px);
 }
 
 .dm-chat-header-content {
@@ -268,30 +304,31 @@
 }
 
 .dm-header-dot {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--text-muted);
 }
 
 .dm-header-dot.online {
-  background: #a2fd05;
+  background: #8686AC;
+  box-shadow: 0 0 8px rgba(134, 134, 172, 0.5);
 }
 
 .dm-header-info {
   display: flex;
   flex-direction: column;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .dm-header-name {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .dm-header-meta {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .dm-chat-body {
@@ -301,6 +338,7 @@
   flex-direction: column;
   gap: 0.75rem;
   overflow-y: auto;
+  background: var(--chat-body-bg);
 }
 
 .dm-bubble-wrapper {
@@ -315,22 +353,26 @@
 }
 
 .dm-bubble {
-  max-width: 65%;
-  padding: 0.65rem 1rem;
-  border-radius: 18px;
-  font-size: 0.96rem;
+  max-width: 70%;
+  padding: 0.8rem 1.2rem;
+  border-radius: var(--settings-border-radius);
+  font-size: 0.98rem;
   line-height: 1.5;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  background: var(--settings-inner-card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--settings-inner-card-border);
   word-break: break-word;
 }
 
 .dm-bubble.them {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--chat-bubble-bg);
+  border-color: var(--chat-border);
 }
 
 .dm-bubble.me {
-  background: linear-gradient(135deg, rgba(162, 253, 5, 0.25), rgba(162, 253, 5, 0.15));
+  background: var(--chat-bubble-me-bg);
+  border-color: var(--chat-border-light);
 }
 
 .dm-bubble-meta {
@@ -364,14 +406,25 @@
 }
 
 @keyframes pulse {
-  0%, 80%, 100% { transform: scale(0.8); opacity: 0.4; }
-  40% { transform: scale(1); opacity: 1; }
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.4;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .dm-input {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(0, 0, 0, 0.5);
+  padding: 1.2rem 1.8rem;
+  border-top: 1px solid var(--chat-border);
+  background: var(--chat-input-bg);
+  backdrop-filter: blur(20px);
 }
 
 .dm-input-form {
@@ -384,17 +437,25 @@
 .dm-textarea {
   flex: 1;
   resize: none;
-  border: none;
+  border: 1px solid var(--border-secondary);
   border-radius: 12px;
-  padding: 0.65rem 0.85rem;
-  min-height: 46px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  padding: 0.8rem 1rem;
+  min-height: 48px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  color: var(--text-primary);
   font-size: 0.95rem;
+  transition: all 0.3s ease;
 }
 
 .dm-textarea:focus {
-  outline: 2px solid rgba(162, 253, 5, 0.25);
+  outline: none;
+  border-color: var(--border-accent);
+  box-shadow: 0 0 0 3px rgba(39, 39, 87, 0.2);
+}
+
+.dm-textarea::placeholder {
+  color: var(--text-muted);
 }
 
 .dm-emoji-btn,
@@ -402,19 +463,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
-  border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  border: 1px solid var(--border-secondary);
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  color: var(--text-primary);
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .dm-emoji-btn:hover,
 .dm-send-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--primary-gradient);
+  border-color: var(--border-accent);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--primary-glow);
 }
 
 .dm-emoji-picker {
@@ -437,12 +503,16 @@
     flex-direction: column;
     height: 100vh;
     border-radius: 0;
+    max-width: 100%;
+    margin: 0;
   }
 
   .dm-list {
     width: 100%;
     max-width: 100%;
+    min-width: auto;
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.5rem 1rem;
   }
 }

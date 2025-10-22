@@ -78,15 +78,24 @@ export const communitiesAPI = {
   sendMessage: (communityId, content) => API.post(`/community/${communityId}/messages`, { content }),
 };
 
+export const messagesAPI = {
+  getConversations: () => API.get('/messages/conversations/'),
+};
+
 export const chatAPI = {
   listConversations: () => API.get('/conversations'),
-  getConversationWithUser: (userId) => API.get(`/conversations/${userId}`),
-  getMessages: (conversationId) => API.get(`/messages/${conversationId}`),
-  sendMessage: (conversationId, payload) => API.post(`/messages/${conversationId}`, payload),
+  getConversation: (conversationId) => API.get(`/conversations/${conversationId}`),
+  sendMessage: (conversationId, content) => API.post(`/conversations/${conversationId}/messages`, { content }),
+  getMessages: (conversationId) => API.get(`/conversations/${conversationId}/messages`),
+  createConversation: (participantId) => API.post('/conversations', { participantId }),
 };
 
 export const notificationsAPI = {
-  getNotifications: () => API.get('/notifications/'),
+  getNotifications: (page = 1, limit = 20) => API.get(`/notifications?page=${page}&limit=${limit}`),
+  getUnreadCount: () => API.get('/notifications/unread-count'),
+  markAsRead: (notificationId) => API.put(`/notifications/${notificationId}/read`),
+  markAllAsRead: () => API.put('/notifications/mark-all-read'),
+  deleteNotification: (notificationId) => API.delete(`/notifications/${notificationId}`),
 };
 
 export default API; 

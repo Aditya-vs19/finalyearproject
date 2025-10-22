@@ -125,6 +125,43 @@ class SocketService {
       this.socket.off('post:commentUpdate', callback);
     }
   }
+
+  // Notification functionality
+  onNewNotification(callback) {
+    if (this.socket) {
+      this.socket.on('notification:new', callback);
+    }
+  }
+
+  offNewNotification(callback) {
+    if (this.socket) {
+      this.socket.off('notification:new', callback);
+    }
+  }
+
+  onNotificationRead(callback) {
+    if (this.socket) {
+      this.socket.on('notification:read', callback);
+    }
+  }
+
+  offNotificationRead(callback) {
+    if (this.socket) {
+      this.socket.off('notification:read', callback);
+    }
+  }
+
+  onNotificationDeleted(callback) {
+    if (this.socket) {
+      this.socket.on('notification:deleted', callback);
+    }
+  }
+
+  offNotificationDeleted(callback) {
+    if (this.socket) {
+      this.socket.off('notification:deleted', callback);
+    }
+  }
 }
 
 export default new SocketService();

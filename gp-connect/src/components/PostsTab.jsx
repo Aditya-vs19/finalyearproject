@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaImage, FaTimes } from 'react-icons/fa';
 import { postsAPI } from '../services/api';
+import './PostsTab.css';
 
 const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
   const [posts, setPosts] = useState([]);

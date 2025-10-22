@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 import Post from '../models/Post.js';
+import { createNotification } from './notificationController.js';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import path from 'path';
@@ -335,6 +336,14 @@ const followUser = asyncHandler(async (req, res) => {
 
   await currentUser.save();
   await targetUser.save();
+
+  // Create notification for the followed user
+  await createNotification(
+    targetUserId,
+    req.user._id,
+    'follow',
+    'started following you'
+  );
 
   res.json({
     message: 'Successfully followed user',

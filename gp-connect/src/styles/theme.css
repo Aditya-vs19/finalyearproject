@@ -1,0 +1,378 @@
+/* Blue Eclipse Theme for GP-ConnecX */
+
+/* CSS Custom Properties for Blue Eclipse Theming */
+:root {
+  /* Primary Color Palette - Blue Eclipse */
+  --primary-gradient: linear-gradient(135deg, #272757 0%, #505081 100%);
+  --secondary-gradient: linear-gradient(135deg, #505081 0%, #8686AC 100%);
+  --accent-gradient: linear-gradient(135deg, #8686AC 0%, #272757 100%);
+  --success-gradient: linear-gradient(135deg, #272757 0%, #505081 100%);
+  --warning-gradient: linear-gradient(135deg, #505081 0%, #8686AC 100%);
+  --danger-gradient: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+
+  /* Blue Eclipse Glass Morphism */
+  --glass-bg: rgba(39, 39, 87, 0.08);
+  --glass-bg-hover: rgba(39, 39, 87, 0.12);
+  --glass-border: rgba(134, 134, 172, 0.2);
+  --glass-border-hover: rgba(134, 134, 172, 0.3);
+  --glass-dark: rgba(15, 14, 71, 0.85);
+  --glass-dark-hover: rgba(39, 39, 87, 0.9);
+
+  /* Blue Eclipse Shadows and Glows */
+  --shadow-glow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-glow-hover: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --primary-glow: 0 4px 15px rgba(39, 39, 87, 0.3);
+  --primary-glow-hover: 0 6px 20px rgba(39, 39, 87, 0.5);
+  --eclipse-glow: 0 0 30px rgba(134, 134, 172, 0.4);
+  --subtle-glow: 0 0 15px rgba(80, 80, 129, 0.2);
+
+  /* Text Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-tertiary: #cbd5e1;
+  --text-muted: #8686AC;
+  --text-disabled: #505081;
+  --text-accent: #8686AC;
+
+  /* Background Colors - Updated to HomePage Dark Slate */
+  --bg-primary: #0f172a;
+  --bg-secondary: rgba(15, 23, 42, 0.8);
+  --bg-tertiary: rgba(51, 65, 85, 0.8);
+  --bg-quaternary: rgba(92, 141, 197, 0.2);
+  --bg-card: rgba(15, 23, 42, 0.8);
+  --bg-card-hover: rgba(51, 65, 85, 0.9);
+
+  /* Consistent Settings Theme - Applied Everywhere - Updated to HomePage Dark Slate */
+  --settings-card-bg: rgba(15, 23, 42, 0.8);
+  --settings-card-border: rgba(92, 141, 197, 0.2);
+  --settings-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(92, 141, 197, 0.1);
+  --settings-card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(92, 141, 197, 0.3);
+  --settings-inner-card-bg: rgba(51, 65, 85, 0.8);
+  --settings-inner-card-border: rgba(92, 141, 197, 0.2);
+  --settings-border-radius: 20px;
+  --settings-inner-radius: 16px;
+
+  /* Dark Slate Chat Colors - Applied to Messages and Posts - Updated to HomePage colors */
+  --chat-main-bg: rgba(15, 23, 42, 0.8);
+  --chat-body-bg: rgba(51, 65, 85, 0.8);
+  --chat-bubble-bg: rgba(51, 65, 85, 0.9);
+  --chat-bubble-me-bg: linear-gradient(135deg, #5C8DC5 0%, #909EAE 100%);
+  --chat-input-bg: rgba(51, 65, 85, 0.8);
+  --chat-border: rgba(92, 141, 197, 0.2);
+  --chat-border-light: rgba(92, 141, 197, 0.3);
+
+  /* Border Colors */
+  --border-primary: rgba(134, 134, 172, 0.2);
+  --border-secondary: rgba(134, 134, 172, 0.1);
+  --border-accent: rgba(39, 39, 87, 0.4);
+  --border-subtle: rgba(80, 80, 129, 0.2);
+  --border-color: rgba(134, 134, 172, 0.2);
+
+  /* White borders for better separation */
+  --border-white: rgba(255, 255, 255, 0.15);
+  --border-white-hover: rgba(255, 255, 255, 0.25);
+  --border-white-subtle: rgba(255, 255, 255, 0.08);
+
+  /* Action Colors */
+  --primary-color: #272757;
+  --primary-hover: #505081;
+  --accent-color: #8686AC;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+
+  /* Animation Easings */
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Harbor Haze Button Styles */
+.btn-primary {
+  background: var(--primary-gradient);
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-smooth);
+  box-shadow: var(--primary-glow);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--primary-glow-hover);
+  background: linear-gradient(135deg, #505081 0%, #272757 100%);
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+.btn-secondary {
+  background: var(--glass-dark);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.btn-secondary:hover {
+  background: var(--glass-dark-hover);
+  border-color: var(--border-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--subtle-glow);
+}
+
+/* Harbor Haze Input Styles */
+.input-glass {
+  background: var(--glass-dark);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-secondary);
+  border-radius: 12px;
+  padding: 0.9rem 1.2rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all 0.3s var(--ease-smooth);
+  width: 100%;
+}
+
+.input-glass::placeholder {
+  color: var(--text-muted);
+}
+
+.input-glass:focus {
+  outline: none;
+  background: var(--glass-dark-hover);
+  border-color: var(--border-accent);
+  box-shadow:
+    0 0 0 3px rgba(39, 39, 87, 0.2),
+    var(--subtle-glow);
+  transform: translateY(-1px);
+}
+
+/* Harbor Haze Card Styles */
+.card-glass {
+  background: var(--glass-dark);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-secondary);
+  border-radius: 20px;
+  box-shadow: var(--shadow-glow);
+  transition: all 0.3s var(--ease-smooth);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(39, 39, 87, 0.6), rgba(134, 134, 172, 0.6), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card-glass:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-glow-hover);
+  border-color: var(--border-primary);
+}
+
+.card-glass:hover::before {
+  opacity: 1;
+}
+
+/* Harbor Haze Floating Animation */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translateY(-8px) scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+/* Harbor Haze Shimmer Animation */
+@keyframes shimmer {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translateX(-100%);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: translateX(100%);
+  }
+}
+
+/* Harbor Haze Gradient Text Animation */
+@keyframes gradientText {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Harbor Haze Pulse Animation */
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.03);
+    opacity: 0.9;
+  }
+}
+
+/* Harbor Haze Glow Animation */
+@keyframes glow {
+
+  0%,
+  100% {
+    box-shadow: var(--subtle-glow);
+  }
+
+  50% {
+    box-shadow: var(--harbor-glow);
+  }
+}
+
+/* Harbor Haze Utility Classes */
+.text-gradient {
+  background: linear-gradient(45deg, #272757, #505081, #8686AC, #f8fafc);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientText 4s ease-in-out infinite;
+}
+
+.text-harbor {
+  color: var(--text-accent);
+}
+
+.floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+.glowing {
+  animation: glow 3s ease-in-out infinite;
+}
+
+.pulsing {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Harbor Haze Responsive Design */
+@media (max-width: 768px) {
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .input-glass {
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .card-glass {
+    border-radius: 16px;
+  }
+}
+
+/* Harbor Haze Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-gradient);
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #505081 0%, #272757 100%);
+}
+
+/* Harbor Haze Selection Styling */
+::selection {
+  background: rgba(39, 39, 87, 0.3);
+  color: var(--text-primary);
+}
+
+::-moz-selection {
+  background: rgba(39, 39, 87, 0.3);
+  color: var(--text-primary);
+}
+
+/* Harbor Haze Focus Styles */
+*:focus {
+  outline: 2px solid rgba(39, 39, 87, 0.5);
+  outline-offset: 2px;
+}
+
+/* Harbor Haze Loading Spinner */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-secondary);
+  border-top: 3px solid #272757;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}

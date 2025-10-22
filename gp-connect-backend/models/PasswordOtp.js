@@ -15,7 +15,6 @@ const passwordOtpSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
     attemptsRemaining: {
       type: Number,

@@ -272,7 +272,7 @@ export default function Feed({ onNavigateToProfile }) {
           <button 
             onClick={() => window.location.reload()} 
             style={{
-              background: '#667eea',
+              background: '#5C8DC5',
               color: 'white',
               border: 'none',
               padding: '0.5rem 1rem',
@@ -415,7 +415,6 @@ export default function Feed({ onNavigateToProfile }) {
                 >
                   💬 {post.commentsCount || 0}
                 </span>
-                <span role="img" aria-label="share">📤</span>
               </div>
             </div>
           </div>

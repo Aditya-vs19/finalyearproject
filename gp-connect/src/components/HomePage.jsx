@@ -6,6 +6,7 @@ import NotificationPage from './NotificationPage';
 import CommonCommunity from './CommonCommunity';
 import SettingsPage from './SettingsPage';
 import CreatePage from './CreatePage';
+import ParticleBackground from './ParticleBackground';
 import './HomePage.css';
 import { FaHome, FaBell, FaEnvelope, FaUser, FaCog, FaSignOutAlt, FaSearch, FaUsers, FaPlus, FaArrowLeft } from 'react-icons/fa';
 import { profileAPI } from '../services/api';
@@ -13,7 +14,7 @@ import { getProfilePicUrl, handleImageError } from '../utils/imageUtils.js';
 
 export default function HomePage({ onLogout }) {
   const [showSettings, setShowSettings] = useState(false);
-  const [showMessages, setShowMessages] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('home');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 700);
@@ -156,7 +157,6 @@ export default function HomePage({ onLogout }) {
 
   const openMessages = (userId = null) => {
     setPendingChatUserId(userId);
-    setShowMessages(true);
     setActiveTab('messages');
   };
 
@@ -391,6 +391,7 @@ export default function HomePage({ onLogout }) {
 
   return (
     <div className="home">
+      <ParticleBackground />
       <header className={`navbar-glass${isMobile ? ' mobile-header' : ''}`}> 
         <div className="left-section">
           <h1 className="brand-gradient">GP‑ConnecX</h1>
@@ -518,6 +519,13 @@ export default function HomePage({ onLogout }) {
               isMobile={isMobile}
             />
           )}
+          {activeTab === 'messages' && currentUser && (
+            <MessagePanel
+              currentUser={currentUser}
+              initialParticipantId={pendingChatUserId}
+              onConversationOpened={() => setPendingChatUserId(null)}
+            />
+          )}
           {activeTab === 'notifications' && <NotificationPage />}
           {activeTab === 'communities' && <CommonCommunity />}
           {activeTab === 'create' && <CreatePage />}
@@ -525,30 +533,6 @@ export default function HomePage({ onLogout }) {
           {activeTab === 'settings' && !isMobile && <SettingsPage onLogout={onLogout} />}
           {/* Add more tab content here later */}
         </div>
-        {/* Overlay for messages */}
-        {showMessages && (
-          <div className={`messages-overlay${isMobile ? ' mobile' : ''}`}>
-            <button
-              className="close-messages-btn"
-              onClick={() => {
-                setShowMessages(false);
-                setPendingChatUserId(null);
-              }}
-              title="Close"
-            >
-              &times;
-            </button>
-            {currentUser ? (
-              <MessagePanel
-                currentUser={currentUser}
-                initialParticipantId={pendingChatUserId}
-                onConversationOpened={() => setPendingChatUserId(null)}
-              />
-            ) : (
-              <div className="messages-loading">Loading chat…</div>
-            )}
-          </div>
-        )}
       </div>
       {isMobile && <MobileFooter />}
     </div>

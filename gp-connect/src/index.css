@@ -1,16 +1,34 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'Segoe UI', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: dark;
+  color: #f8fafc;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 25s ease infinite;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* Harbor Haze CSS Variables (Cool Blues Only) */
+  --primary-gradient: linear-gradient(135deg, #5C8DC5 0%, #909EAE 100%);
+  --secondary-gradient: linear-gradient(135deg, #909EAE 0%, #cbd5e1 100%);
+  --accent-gradient: linear-gradient(135deg, #909EAE 0%, #5C8DC5 100%);
+  --success-gradient: linear-gradient(135deg, #5C8DC5 0%, #909EAE 100%);
+  --warning-gradient: linear-gradient(135deg, #909EAE 0%, #cbd5e1 100%);
+  --glass-bg: rgba(20, 25, 30, 0.85);
+  --glass-border: rgba(144, 158, 174, 0.2);
+  --shadow-glow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 a {
@@ -28,6 +46,30 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background: inherit;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Harbor Haze floating particles background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(92, 141, 197, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(144, 158, 174, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(203, 213, 225, 0.10) 0%, transparent 50%);
+  animation: floatingBg 30s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes floatingBg {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.1) rotate(180deg); }
 }
 
 h1 {
@@ -36,22 +78,48 @@ h1 {
 }
 
 button {
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
+
+button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
 button:hover {
-  border-color: #646cff;
+  background: var(--primary-gradient);
+  border-color: var(--glass-border);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+  color: white;
 }
+
+button:hover::before {
+  left: 100%;
+}
+
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid rgba(92, 141, 197, 0.5);
+  outline-offset: 2px;
 }
 
 @media (prefers-color-scheme: light) {

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './LoginPage.css';
 import { authAPI } from '../services/api';
+import { FaEye, FaEyeSlash, FaEnvelope } from 'react-icons/fa';
 import {
   ADMISSION_YEARS,
   DEPARTMENTS,
@@ -95,6 +96,8 @@ function RegistrationPage({ onRegister, onSwitchToLogin }) {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     const styleElement = document.createElement('style');
@@ -222,148 +225,186 @@ function RegistrationPage({ onRegister, onSwitchToLogin }) {
 
   return (
     <div className="auth-container">
+      {/* Harbor Haze live background */}
+      <div className="auth-bg">
+        {/* Floating particles */}
+        <div className="particle p1"></div>
+        <div className="particle p2"></div>
+        <div className="particle p3"></div>
+        <div className="particle p4"></div>
+      </div>
+
+      {/* Small gradient blobs positioned away from logo */}
+      <div className="gradient-blob blob-2"></div>
+      <div className="gradient-blob blob-3"></div>
+      <div className="gradient-blob blob-4"></div>
+      <div className="gradient-blob blob-5"></div>
+      
       <div className="auth-header">
         <h1 className="brand-gradient">GP‑ConnecX</h1>
       </div>
       <form className="auth-card register-card" onSubmit={handleRegister} noValidate>
         <h2 className="auth-title">Register on GP‑ConnecX</h2>
 
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="fullName">Full Name</label>
-          <input
-            id="fullName"
-            className={`auth-input${isFieldInvalid('fullName') ? ' auth-input-error' : ''}`}
-            type="text"
-            name="fullName"
-            value={formValues.fullName}
-            onChange={handleChange('fullName')}
-            onBlur={handleBlur('fullName')}
-            aria-invalid={isFieldInvalid('fullName')}
-            aria-describedby="fullName-error"
-            autoComplete="name"
-          />
-          {renderError('fullName', 'fullName-error')}
-        </div>
+        <div className="register-form-grid">
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="fullName">Full Name</label>
+            <input
+              id="fullName"
+              className={`auth-input${isFieldInvalid('fullName') ? ' auth-input-error' : ''}`}
+              type="text"
+              name="fullName"
+              value={formValues.fullName}
+              onChange={handleChange('fullName')}
+              onBlur={handleBlur('fullName')}
+              aria-invalid={isFieldInvalid('fullName')}
+              aria-describedby="fullName-error"
+              autoComplete="name"
+            />
+            {renderError('fullName', 'fullName-error')}
+          </div>
 
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="email">Email</label>
-          <input
-            id="email"
-            className={`auth-input${isFieldInvalid('email') ? ' auth-input-error' : ''}`}
-            type="email"
-            name="email"
-            value={formValues.email}
-            onChange={handleChange('email')}
-            onBlur={handleBlur('email')}
-            aria-invalid={isFieldInvalid('email')}
-            aria-describedby="email-error"
-            autoComplete="email"
-          />
-          {renderError('email', 'email-error')}
-        </div>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="email">Email</label>
+            <div className="email-input-wrapper">
+              <FaEnvelope className="email-input-icon" />
+              <input
+                id="email"
+                className={`auth-input auth-input-with-icon${isFieldInvalid('email') ? ' auth-input-error' : ''}`}
+                type="email"
+                name="email"
+                value={formValues.email}
+                onChange={handleChange('email')}
+                onBlur={handleBlur('email')}
+                aria-invalid={isFieldInvalid('email')}
+                aria-describedby="email-error"
+                autoComplete="email"
+              />
+            </div>
+            {renderError('email', 'email-error')}
+          </div>
 
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="admissionYear">Admission Year</label>
-          <select
-            id="admissionYear"
-            className={`auth-input${isFieldInvalid('admissionYear') ? ' auth-input-error' : ''}`}
-            name="admissionYear"
-            value={formValues.admissionYear}
-            onChange={handleChange('admissionYear')}
-            onBlur={handleBlur('admissionYear')}
-            aria-invalid={isFieldInvalid('admissionYear')}
-            aria-describedby="admissionYear-error"
-          >
-            <option value="">Select admission year</option>
-            {ADMISSION_YEARS.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-          {renderError('admissionYear', 'admissionYear-error')}
-        </div>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="admissionYear">Admission Year</label>
+            <select
+              id="admissionYear"
+              className={`auth-input${isFieldInvalid('admissionYear') ? ' auth-input-error' : ''}`}
+              name="admissionYear"
+              value={formValues.admissionYear}
+              onChange={handleChange('admissionYear')}
+              onBlur={handleBlur('admissionYear')}
+              aria-invalid={isFieldInvalid('admissionYear')}
+              aria-describedby="admissionYear-error"
+            >
+              <option value="">Select admission year</option>
+              {ADMISSION_YEARS.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+            {renderError('admissionYear', 'admissionYear-error')}
+          </div>
 
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="department">Department</label>
-          <select
-            id="department"
-            className={`auth-input${isFieldInvalid('departmentCode') ? ' auth-input-error' : ''}`}
-            name="department"
-            value={formValues.departmentCode}
-            onChange={handleChange('departmentCode')}
-            onBlur={handleBlur('departmentCode')}
-            aria-invalid={isFieldInvalid('departmentCode')}
-            aria-describedby="department-error"
-          >
-            <option value="">Select department</option>
-            {DEPARTMENTS.map((department) => (
-              <option key={department.code} value={department.code}>
-                {department.code} — {department.name}
-              </option>
-            ))}
-          </select>
-          {renderError('departmentCode', 'department-error')}
-        </div>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="department">Department</label>
+            <select
+              id="department"
+              className={`auth-input${isFieldInvalid('departmentCode') ? ' auth-input-error' : ''}`}
+              name="department"
+              value={formValues.departmentCode}
+              onChange={handleChange('departmentCode')}
+              onBlur={handleBlur('departmentCode')}
+              aria-invalid={isFieldInvalid('departmentCode')}
+              aria-describedby="department-error"
+            >
+              <option value="">Select department</option>
+              {DEPARTMENTS.map((department) => (
+                <option key={department.code} value={department.code}>
+                  {department.code} — {department.name}
+                </option>
+              ))}
+            </select>
+            {renderError('departmentCode', 'department-error')}
+          </div>
 
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="enrollment">Enrollment Number</label>
-          <input
-            id="enrollment"
-            className={`auth-input${isFieldInvalid('enrollment') ? ' auth-input-error' : ''}`}
-            type="text"
-            name="enrollment"
-            value={formValues.enrollment}
-            onChange={handleChange('enrollment')}
-            onBlur={handleBlur('enrollment')}
-            aria-invalid={isFieldInvalid('enrollment')}
-            aria-describedby="enrollment-helper enrollment-error"
-            inputMode="numeric"
-            maxLength={7}
-            pattern="\d{7}"
-            placeholder={enrollmentEnabled ? `Starts with ${enrollmentPrefix}` : 'Select year and department first'}
-            disabled={!enrollmentEnabled}
-          />
-          <span className="auth-helper" id="enrollment-helper">
-            {enrollmentEnabled
-              ? `Format: ${enrollmentPrefix}XXX (roll number 001-999)`
-              : 'Select admission year and department to unlock'}
-          </span>
-          {renderError('enrollment', 'enrollment-error')}
-        </div>
+          <div className="auth-field register-full-width">
+            <label className="auth-label" htmlFor="enrollment">Enrollment Number</label>
+            <input
+              id="enrollment"
+              className={`auth-input${isFieldInvalid('enrollment') ? ' auth-input-error' : ''}`}
+              type="text"
+              name="enrollment"
+              value={formValues.enrollment}
+              onChange={handleChange('enrollment')}
+              onBlur={handleBlur('enrollment')}
+              aria-invalid={isFieldInvalid('enrollment')}
+              aria-describedby="enrollment-helper enrollment-error"
+              inputMode="numeric"
+              maxLength={7}
+              pattern="\d{7}"
+              placeholder={enrollmentEnabled ? `Starts with ${enrollmentPrefix}` : 'Select year and department first'}
+              disabled={!enrollmentEnabled}
+            />
+            <span className="auth-helper" id="enrollment-helper">
+              {enrollmentEnabled
+                ? `Format: ${enrollmentPrefix}XXX (roll number 001-999)`
+                : 'Select admission year and department to unlock'}
+            </span>
+            {renderError('enrollment', 'enrollment-error')}
+          </div>
 
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="password">Password</label>
-          <input
-            id="password"
-            className={`auth-input${isFieldInvalid('password') ? ' auth-input-error' : ''}`}
-            type="password"
-            name="password"
-            value={formValues.password}
-            onChange={handleChange('password')}
-            onBlur={handleBlur('password')}
-            aria-invalid={isFieldInvalid('password')}
-            aria-describedby="password-error"
-            autoComplete="new-password"
-          />
-          {renderError('password', 'password-error')}
-        </div>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="password">Password</label>
+            <div className="password-input-wrapper">
+              <input
+                id="password"
+                className={`auth-input${isFieldInvalid('password') ? ' auth-input-error' : ''}`}
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formValues.password}
+                onChange={handleChange('password')}
+                onBlur={handleBlur('password')}
+                aria-invalid={isFieldInvalid('password')}
+                aria-describedby="password-error"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+            {renderError('password', 'password-error')}
+          </div>
 
-        <div className="auth-field">
-          <label className="auth-label" htmlFor="confirmPassword">Confirm Password</label>
-          <input
-            id="confirmPassword"
-            className={`auth-input${isFieldInvalid('confirmPassword') ? ' auth-input-error' : ''}`}
-            type="password"
-            name="confirmPassword"
-            value={formValues.confirmPassword}
-            onChange={handleChange('confirmPassword')}
-            onBlur={handleBlur('confirmPassword')}
-            aria-invalid={isFieldInvalid('confirmPassword')}
-            aria-describedby="confirmPassword-error"
-            autoComplete="new-password"
-          />
-          {renderError('confirmPassword', 'confirmPassword-error')}
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="confirmPassword">Confirm Password</label>
+            <div className="password-input-wrapper">
+              <input
+                id="confirmPassword"
+                className={`auth-input${isFieldInvalid('confirmPassword') ? ' auth-input-error' : ''}`}
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formValues.confirmPassword}
+                onChange={handleChange('confirmPassword')}
+                onBlur={handleBlur('confirmPassword')}
+                aria-invalid={isFieldInvalid('confirmPassword')}
+                aria-describedby="confirmPassword-error"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+            {renderError('confirmPassword', 'confirmPassword-error')}
+          </div>
         </div>
 
         {serverError && (
