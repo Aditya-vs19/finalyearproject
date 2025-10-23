@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './LoginPage.css';
 import { authAPI } from '../services/api';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaEnvelope } from 'react-icons/fa';
 
 
 const style = document.createElement('style');
@@ -62,14 +62,17 @@ function LoginPage({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
 
       <form onSubmit={handleLogin} className="auth-card">
         <h2 className="auth-title">Welcome Back</h2>
-        <input
-          className="auth-input"
-          type="email"
-          placeholder="Email"
-          value={email}
-          required
-          onChange={e => setEmail(e.target.value)}
-        />
+        <div className="email-input-wrapper">
+          <FaEnvelope className="email-input-icon" />
+          <input
+            className="auth-input auth-input-with-icon"
+            type="email"
+            placeholder="Email"
+            value={email}
+            required
+            onChange={e => setEmail(e.target.value)}
+          />
+        </div>
         <div className="password-input-wrapper">
           <input
             className="auth-input"

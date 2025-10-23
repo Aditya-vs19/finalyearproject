@@ -128,6 +128,9 @@
   font-size: 1rem;
   color: rgba(255, 255, 255, 0.7);
   margin: 0 0 1rem 0;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .profile-status {
@@ -273,6 +276,9 @@
   font-weight: 500;
   color: white;
   margin: 0;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 /* Security and Action Buttons */
 .security-actions, .danger-actions {
@@ -455,6 +461,8 @@
 .password-toggle-btn {
   position: absolute;
   right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.6);
@@ -463,6 +471,9 @@
   border-radius: 4px;
   transition: all 0.3s ease;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .password-toggle-btn:hover {

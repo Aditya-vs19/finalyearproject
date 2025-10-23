@@ -24,12 +24,41 @@ export default function HomePage({ onLogout }) {
   const [showTopSearchDropdown, setShowTopSearchDropdown] = useState(false);
   const [isTopSearching, setIsTopSearching] = useState(false);
   const [pendingChatUserId, setPendingChatUserId] = useState(null);
+  const [mobileToast, setMobileToast] = useState({ visible: false, message: '', type: 'info' });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 700);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Mobile toast notification function
+  const showMobileToast = (message, type = 'info', duration = 3000) => {
+    setMobileToast({ visible: true, message, type });
+    setTimeout(() => {
+      setMobileToast({ visible: false, message: '', type: 'info' });
+    }, duration);
+  };
+
+  // Mobile haptic feedback simulation
+  const triggerHapticFeedback = (type = 'light') => {
+    if (isMobile && 'vibrate' in navigator) {
+      switch (type) {
+        case 'light':
+          navigator.vibrate(10);
+          break;
+        case 'medium':
+          navigator.vibrate(20);
+          break;
+        case 'heavy':
+          navigator.vibrate([30, 10, 30]);
+          break;
+        default:
+          navigator.vibrate(10);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -94,10 +123,15 @@ export default function HomePage({ onLogout }) {
 
   const handleTopSearchFollowToggle = async (userId, isCurrentlyFollowing) => {
     try {
+      setIsLoading(true);
+      triggerHapticFeedback('light');
+      
       if (isCurrentlyFollowing) {
         await profileAPI.unfollowUser(userId);
+        showMobileToast('Unfollowed successfully', 'success');
       } else {
         await profileAPI.followUser(userId);
+        showMobileToast('Following successfully', 'success');
       }
       
       // Update the search results to reflect the change
@@ -110,6 +144,9 @@ export default function HomePage({ onLogout }) {
       );
     } catch (error) {
       console.error('Follow/unfollow error:', error);
+      showMobileToast('Failed to update follow status', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -210,35 +247,16 @@ export default function HomePage({ onLogout }) {
       }
     };
 
-    const handleSearch = async (e) => {
-      e.preventDefault();
-      if (localSearchTerm.trim().length < 2) {
-        setSearchError('Search query must be at least 2 characters long');
-        return;
-      }
-
-      setIsSearching(true);
-      setSearchError('');
-      setHasSearched(true);
-      
-      try {
-        const response = await profileAPI.searchUsers(localSearchTerm.trim());
-        setSearchResults(response.data || []);
-      } catch (error) {
-        console.error('Search error:', error);
-        setSearchError('Failed to search users. Please try again.');
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
     const handleFollowToggle = async (userId, isCurrentlyFollowing) => {
       try {
+        triggerHapticFeedback('light');
+        
         if (isCurrentlyFollowing) {
           await profileAPI.unfollowUser(userId);
+          showMobileToast('Unfollowed successfully', 'success');
         } else {
           await profileAPI.followUser(userId);
+          showMobileToast('Following successfully', 'success');
         }
         
         // Update the search results to reflect the change
@@ -251,7 +269,7 @@ export default function HomePage({ onLogout }) {
         );
       } catch (error) {
         console.error('Follow/unfollow error:', error);
-        alert('Failed to update follow status. Please try again.');
+        showMobileToast('Failed to update follow status', 'error');
       }
     };
 
@@ -268,24 +286,7 @@ export default function HomePage({ onLogout }) {
     return (
       <div className="search-page">
         <div className="search-header">
-          <button className="mobile-back-btn" onClick={() => setActiveTab('home')}>
-            <FaArrowLeft />
-          </button>
-          <h2>Search</h2>
-          <button 
-            onClick={testDatabase}
-            style={{
-              marginTop: '10px',
-              padding: '8px 16px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Test DB
-          </button>
+          <h2>Search Users</h2>
         </div>
 
         <div className="search-form">
@@ -344,7 +345,7 @@ export default function HomePage({ onLogout }) {
                   <div className="search-fullname">{user.fullName}</div>
                   <div className="search-department">{user.department} Department</div>
                   {user.isFollowing && (
-                    <div className="followed-by">Followed by you</div>
+                    <div className="followed-by">Following</div>
                   )}
                 </div>
                 <div className="search-user-actions">
@@ -381,12 +382,69 @@ export default function HomePage({ onLogout }) {
   // Footer nav for mobile
   const MobileFooter = () => (
     <footer className="mobile-footer-nav">
-      <button className={`footer-tab${activeTab === 'home' ? ' active' : ''}`} onClick={() => setActiveTab('home')}><FaHome /></button>
-      <button className={`footer-tab${activeTab === 'communities' ? ' active' : ''}`} onClick={() => setActiveTab('communities')}><FaUsers /></button>
-      <button className={`footer-tab${activeTab === 'create' ? ' active' : ''}`} onClick={() => setActiveTab('create')}><FaPlus /></button>
-      <button className="footer-tab search-tab" onClick={() => setActiveTab('search')}><FaSearch /></button>
-      <button className={`footer-tab${activeTab === 'profile' ? ' active' : ''}`} onClick={handleNavigateToMyProfile}><FaUser /></button>
+      <button 
+        className={`footer-tab${activeTab === 'home' ? ' active' : ''}`} 
+        onClick={() => {
+          triggerHapticFeedback('light');
+          setActiveTab('home');
+        }}
+      >
+        <FaHome />
+      </button>
+      <button 
+        className={`footer-tab${activeTab === 'communities' ? ' active' : ''}`} 
+        onClick={() => {
+          triggerHapticFeedback('light');
+          setActiveTab('communities');
+        }}
+      >
+        <FaUsers />
+      </button>
+      <button 
+        className={`footer-tab${activeTab === 'create' ? ' active' : ''}`} 
+        onClick={() => {
+          triggerHapticFeedback('light');
+          setActiveTab('create');
+        }}
+      >
+        <FaPlus />
+      </button>
+      <button 
+        className="footer-tab search-tab" 
+        onClick={() => {
+          triggerHapticFeedback('light');
+          setActiveTab('search');
+        }}
+      >
+        <FaSearch />
+      </button>
+      <button 
+        className={`footer-tab${activeTab === 'profile' ? ' active' : ''}`} 
+        onClick={() => {
+          triggerHapticFeedback('light');
+          handleNavigateToMyProfile();
+        }}
+      >
+        <FaUser />
+      </button>
     </footer>
+  );
+
+  // Mobile Toast Component
+  const MobileToast = () => (
+    <div className={`mobile-toast ${mobileToast.visible ? 'visible' : ''} ${mobileToast.type}`}>
+      {mobileToast.message}
+    </div>
+  );
+
+  // Mobile Loading Overlay
+  const MobileLoadingOverlay = () => (
+    <div className={`mobile-loading-overlay ${isLoading ? 'visible' : ''}`}>
+      <div className="mobile-loading-content">
+        <div className="mobile-loading-spinner"></div>
+        <p>Loading...</p>
+      </div>
+    </div>
   );
 
   return (
@@ -503,20 +561,15 @@ export default function HomePage({ onLogout }) {
         )}
         <div className={`feed-col`}>
           {activeTab === 'home' && <Feed onNavigateToProfile={handleNavigateToProfile} />}
-          {activeTab === 'profile' && !showSettings && (
+          {activeTab === 'profile' && (
             <ProfilePage
               userProfile={viewingUserProfile}
               onBackToHome={handleBackToHome}
-              onNavigateToSettings={() => setShowSettings(true)}
+              onLogout={onLogout}
               onStartChat={handleStartChatFromProfile}
               isMobile={isMobile}
-            />
-          )}
-          {activeTab === 'profile' && showSettings && (
-            <SettingsPage 
-              onLogout={onLogout}
-              onBackToProfile={() => setShowSettings(false)}
-              isMobile={isMobile}
+              showSettings={showSettings}
+              onToggleSettings={() => setShowSettings(!showSettings)}
             />
           )}
           {activeTab === 'messages' && currentUser && (
@@ -535,6 +588,8 @@ export default function HomePage({ onLogout }) {
         </div>
       </div>
       {isMobile && <MobileFooter />}
+      {isMobile && <MobileToast />}
+      {isMobile && <MobileLoadingOverlay />}
     </div>
   );
 }

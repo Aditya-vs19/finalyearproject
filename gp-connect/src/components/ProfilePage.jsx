@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaArrowLeft, FaEnvelope, FaBuilding, FaCalendarAlt, FaSave, FaTimes } from 'react-icons/fa';
+import { FaEdit, FaArrowLeft, FaEnvelope, FaBuilding, FaCalendarAlt, FaSave, FaTimes, FaCog } from 'react-icons/fa';
 import { profileAPI } from '../services/api';
-import { getProfilePicUrl, getPostImageUrl, handleImageError } from '../utils/imageUtils.js';
+import { getProfilePicUrl, handleImageError } from '../utils/imageUtils.js';
+import PostsTab from './PostsTab.jsx';
+import SettingsPage from './SettingsPage.jsx';
 import './ProfilePage.css';
 
-const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, onStartChat, isMobile }) => {
+const ProfilePage = ({ userProfile, onBackToHome, onLogout, onStartChat, isMobile, showSettings, onToggleSettings }) => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [userPosts, setUserPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -44,14 +45,12 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, onStartC
           const otherUser = response.data.user;
           setViewedUser(otherUser);
           setCanMessageTarget(!!otherUser?.canMessage);
-          setUserPosts(response.data.posts);
           setUserStats(otherUser.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
           setIsFollowing(response.data.isFollowing || false);
           setProfilePicPreview(null);
         } else {
           setViewedUser(loggedInUser);
           setCanMessageTarget(false);
-          setUserPosts(currentUserResponse.data.posts);
           setUserStats(loggedInUser.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
           setIsFollowing(false);
           setFormData({
@@ -117,7 +116,6 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, onStartC
       setCurrentUser(updatedUser);
       setViewedUser(updatedUser);
       setCanMessageTarget(false);
-      setUserPosts(updatedResponse.data.posts);
       setUserStats(updatedUser.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
       setProfilePicPreview(updatedUser.profilePic ? getProfilePicUrl(updatedUser.profilePic) : null);
       setFormData({
@@ -200,15 +198,21 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, onStartC
     );
   }
 
+  // If showing settings on mobile, render SettingsPage instead
+  if (isMobile && showSettings) {
+    return (
+      <SettingsPage 
+        onLogout={onLogout}
+        onBackToProfile={() => onToggleSettings()}
+        isMobile={isMobile}
+      />
+    );
+  }
+
   return (
     <div className="profile-page">
       <div className="profile-content">
         <div className="profile-header">
-          {isMobile && (
-            <button className="mobile-back-btn" onClick={onBackToHome}>
-              <FaArrowLeft />
-            </button>
-          )}
           <h2 className="profile-title">
             {isOwnProfile ? 'My Profile' : `${displayUser?.fullName || 'User'}'s Profile`}
           </h2>
@@ -216,6 +220,12 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, onStartC
             <div className="profile-subtitle">
               @{displayUser?.enrollment}
             </div>
+          )}
+          {/* Settings button for mobile */}
+          {isMobile && isOwnProfile && (
+            <button className="mobile-settings-btn" onClick={() => onToggleSettings()}>
+              <FaCog />
+            </button>
           )}
         </div>
 
@@ -384,45 +394,11 @@ const ProfilePage = ({ userProfile, onBackToHome, onNavigateToSettings, onStartC
 
           {/* Posts Section */}
           <div className="posts-section">
-            <h4>{isOwnProfile ? 'My Posts' : `${displayUser?.fullName}'s Posts`}</h4>
-            {userPosts.length === 0 ? (
-              <div className="no-posts">
-                <p>No posts yet.</p>
-              </div>
-            ) : (
-              <div className="posts-list">
-                {userPosts.map(post => (
-                  <div key={post._id} className="post-item">
-                    <div className="post-header">
-                      <div className="post-user-info">
-                        <img
-                          src={getProfilePicUrl(post.userId.profilePic)}
-                          alt="Profile"
-                          className="post-user-avatar"
-                          onError={(e) => handleImageError(e, '/default-avatar.svg')}
-                        />
-                        <div>
-                          <h5>{post.userId.fullName}</h5>
-                          <p className="post-time">{formatDate(post.createdAt)}</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="post-content">
-                      <p>{post.caption}</p>
-                      {post.image && (
-                        <div className="post-image">
-                          <img 
-                            src={getPostImageUrl(post.image)} 
-                            alt="Post" 
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <PostsTab 
+              userProfile={displayUser}
+              currentUser={currentUser}
+              isOwnProfile={isOwnProfile}
+            />
           </div>
         </div>
       </div>

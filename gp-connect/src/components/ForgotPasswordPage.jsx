@@ -121,7 +121,7 @@ function ForgotPasswordPage({ onNavigate }) {
       <div className="auth-header">
         <h1 className="brand-gradient">GP‑ConnecX</h1>
       </div>
-      
+
       <form onSubmit={handleReset} className="auth-card register-card">
         <h2 className="auth-title" style={{ fontSize: '2rem', marginBottom: '2rem' }}>Forgot Password</h2>
         <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '3rem', fontSize: '1.1rem', lineHeight: '1.5' }}>
@@ -140,7 +140,7 @@ function ForgotPasswordPage({ onNavigate }) {
             style={{ paddingLeft: '3.5rem', fontSize: '1.1rem', padding: '1.2rem 1.2rem 1.2rem 3.5rem' }}
           />
         </div>
-        
+
         {error && <div className="auth-error" style={{ textAlign: 'center', fontSize: '1rem', marginBottom: '1.5rem' }}>{error}</div>}
 
         <button
@@ -153,7 +153,7 @@ function ForgotPasswordPage({ onNavigate }) {
         </button>
 
         <p className="auth-footer-text" style={{ fontSize: '1rem', marginTop: '2rem' }}>
-          Remember your password? 
+          Remember your password?
           <span className="auth-link" onClick={handleBackToLogin} style={{ marginLeft: '0.5rem' }}>
             Back to Login
           </span>

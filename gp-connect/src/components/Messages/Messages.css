@@ -498,13 +498,16 @@
   text-align: center;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 700px) {
   .dm-container {
     flex-direction: column;
-    height: 100vh;
+    height: calc(100vh - 140px);
     border-radius: 0;
     max-width: 100%;
     margin: 0;
+    background: transparent;
+    box-shadow: none;
+    border: none;
   }
 
   .dm-list {
@@ -512,7 +515,270 @@
     max-width: 100%;
     min-width: auto;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 1.5rem 1rem;
+    border-bottom: 1px solid rgba(92, 141, 197, 0.2);
+    padding: 1rem;
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(20px);
+    border-radius: 16px 16px 0 0;
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .dm-title {
+    font-size: 1.4rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .dm-search {
+    background: rgba(51, 65, 85, 0.8);
+    border: 1px solid rgba(92, 141, 197, 0.2);
+    border-radius: 16px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .dm-search-input {
+    font-size: 1rem;
+    color: #f8fafc;
+  }
+
+  .dm-search-input::placeholder {
+    color: #94a3b8;
+  }
+
+  .dm-conversation-list {
+    gap: 0.5rem;
+    max-height: 25vh;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+  }
+
+  .msg-item {
+    padding: 1rem;
+    border-radius: 12px;
+    background: rgba(51, 65, 85, 0.6);
+    border: 1px solid rgba(92, 141, 197, 0.2);
+    transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .msg-item:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+
+  .msg-item:hover {
+    background: rgba(51, 65, 85, 0.8);
+    border-color: rgba(92, 141, 197, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .msg-item.selected {
+    background: linear-gradient(135deg, rgba(92, 141, 197, 0.2), rgba(144, 158, 174, 0.15));
+    border-color: rgba(92, 141, 197, 0.4);
+    transform: none;
+    box-shadow: 0 4px 15px rgba(92, 141, 197, 0.3);
+  }
+
+  .msg-avatar {
+    width: 44px;
+    height: 44px;
+    border: 2px solid rgba(92, 141, 197, 0.3);
+  }
+
+  .msg-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f8fafc;
+  }
+
+  .msg-preview {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    margin-top: 0.2rem;
+  }
+
+  .dm-main {
+    flex: 1;
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(20px);
+    border-radius: 0 0 16px 16px;
+    min-height: 60vh;
+  }
+
+  .dm-chat-header {
+    padding: 1rem 1.2rem;
+    background: rgba(30, 41, 59, 0.9);
+    border-bottom: 1px solid rgba(92, 141, 197, 0.2);
+    border-radius: 0;
+  }
+
+  .dm-header-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f8fafc;
+  }
+
+  .dm-header-meta {
+    font-size: 0.85rem;
+    color: #94a3b8;
+  }
+
+  .dm-chat-body {
+    padding: 1rem;
+    gap: 0.8rem;
+    background: transparent;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dm-bubble {
+    max-width: 85%;
+    padding: 1rem 1.2rem;
+    border-radius: 18px;
+    font-size: 1rem;
+    line-height: 1.5;
+    word-break: break-word;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .dm-bubble.them {
+    background: rgba(51, 65, 85, 0.8);
+    border: 1px solid rgba(92, 141, 197, 0.2);
+    color: #f8fafc;
+  }
+
+  .dm-bubble.me {
+    background: linear-gradient(135deg, #5C8DC5 0%, #909EAE 100%);
+    border: 1px solid rgba(92, 141, 197, 0.3);
+    color: white;
+  }
+
+  .dm-bubble-meta {
+    font-size: 0.75rem;
+    color: rgba(248, 250, 252, 0.6);
+    margin-top: 0.3rem;
+  }
+
+  .dm-input {
+    padding: 1rem 1.2rem;
+    background: rgba(30, 41, 59, 0.9);
+    border-top: 1px solid rgba(92, 141, 197, 0.2);
+    border-radius: 0 0 16px 16px;
+  }
+
+  .dm-input-form {
+    gap: 0.8rem;
+    align-items: flex-end;
+  }
+
+  .dm-textarea {
+    border: 1px solid rgba(92, 141, 197, 0.2);
+    border-radius: 20px;
+    padding: 1rem 1.2rem;
+    min-height: 44px;
+    max-height: 120px;
+    background: rgba(51, 65, 85, 0.8);
+    color: #f8fafc;
+    font-size: 1rem;
+    resize: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .dm-textarea:focus {
+    border-color: #5C8DC5;
+    background: rgba(51, 65, 85, 0.9);
+    box-shadow: 0 0 0 3px rgba(92, 141, 197, 0.2);
+  }
+
+  .dm-textarea::placeholder {
+    color: #94a3b8;
+  }
+
+  .dm-emoji-btn,
+  .dm-send-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(92, 141, 197, 0.2);
+    background: rgba(51, 65, 85, 0.8);
+    color: #f8fafc;
+    font-size: 1.2rem;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: all 0.3s ease;
+  }
+
+  .dm-emoji-btn:active,
+  .dm-send-btn:active {
+    transform: scale(0.9);
+    transition: transform 0.1s ease;
+  }
+
+  .dm-emoji-btn:hover,
+  .dm-send-btn:hover {
+    background: linear-gradient(135deg, #5C8DC5 0%, #909EAE 100%);
+    border-color: rgba(92, 141, 197, 0.4);
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(92, 141, 197, 0.3);
+  }
+
+  /* Mobile typing indicator */
+  .dm-bubble.typing {
+    background: rgba(51, 65, 85, 0.8);
+    border: 1px solid rgba(92, 141, 197, 0.2);
+    padding: 1rem 1.2rem;
+  }
+
+  .dm-typing-dot {
+    width: 10px;
+    height: 10px;
+    background: #94a3b8;
+  }
+
+  /* Mobile scroll improvements */
+  .dm-conversation-list::-webkit-scrollbar,
+  .dm-chat-body::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .dm-conversation-list::-webkit-scrollbar-track,
+  .dm-chat-body::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dm-conversation-list::-webkit-scrollbar-thumb,
+  .dm-chat-body::-webkit-scrollbar-thumb {
+    background: rgba(92, 141, 197, 0.3);
+    border-radius: 2px;
+  }
+
+  /* Mobile error states */
+  .dm-error-banner {
+    top: 0.5rem;
+    right: 0.5rem;
+    left: 0.5rem;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+  }
+
+  /* Mobile loading states */
+  .dm-loading-state,
+  .dm-loading-messages {
+    font-size: 1rem;
+    color: #94a3b8;
+  }
+
+  /* Mobile placeholder */
+  .dm-chat-placeholder {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    text-align: center;
+    padding: 2rem 1rem;
   }
 }

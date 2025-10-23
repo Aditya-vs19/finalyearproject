@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaImage, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaImage, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
 import { postsAPI } from '../services/api';
 import './PostsTab.css';
 
@@ -15,6 +15,8 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
   const [imagePreview, setImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, postId: null, postCaption: '' });
+  const [deleting, setDeleting] = useState(null);
 
   useEffect(() => {
     fetchPosts();
@@ -102,19 +104,35 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
     setShowCreateForm(true);
   };
 
-  const handleDelete = async (postId) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      try {
-        await postsAPI.deletePost(postId);
-        setMessage({ type: 'success', text: 'Post deleted successfully!' });
-        fetchPosts();
-      } catch (error) {
-        setMessage({ 
-          type: 'error', 
-          text: error.response?.data?.message || 'Failed to delete post' 
-        });
-      }
+  const handleDeleteClick = (post) => {
+    setDeleteConfirm({
+      show: true,
+      postId: post._id,
+      postCaption: post.caption
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const postId = deleteConfirm.postId;
+    setDeleting(postId);
+    
+    try {
+      await postsAPI.deletePost(postId);
+      setMessage({ type: 'success', text: 'Post deleted successfully!' });
+      fetchPosts();
+      setDeleteConfirm({ show: false, postId: null, postCaption: '' });
+    } catch (error) {
+      setMessage({ 
+        type: 'error', 
+        text: error.response?.data?.message || 'Failed to delete post' 
+      });
+    } finally {
+      setDeleting(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm({ show: false, postId: null, postCaption: '' });
   };
 
   const handleCancel = () => {
@@ -278,11 +296,16 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
                       <FaEdit />
                     </button>
                     <button 
-                      onClick={() => handleDelete(post._id)}
+                      onClick={() => handleDeleteClick(post)}
                       className="action-btn delete-btn"
                       title="Delete post"
+                      disabled={deleting === post._id}
                     >
-                      <FaTrash />
+                      {deleting === post._id ? (
+                        <div className="mini-spinner"></div>
+                      ) : (
+                        <FaTrash />
+                      )}
                     </button>
                   </div>
                 )}
@@ -303,6 +326,61 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
           ))
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.show && (
+        <div className="modal-overlay">
+          <div className="delete-modal">
+            <div className="modal-header">
+              <div className="modal-title">
+                <FaExclamationTriangle className="warning-icon" />
+                <h3>Delete Post</h3>
+              </div>
+              <button onClick={handleDeleteCancel} className="modal-close">
+                <FaTimes />
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+              {deleteConfirm.postCaption && (
+                <div className="post-preview">
+                  <strong>Post:</strong> "{deleteConfirm.postCaption.length > 100 
+                    ? deleteConfirm.postCaption.substring(0, 100) + '...' 
+                    : deleteConfirm.postCaption}"
+                </div>
+              )}
+            </div>
+            
+            <div className="modal-actions">
+              <button 
+                onClick={handleDeleteCancel}
+                className="btn btn-secondary"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDeleteConfirm}
+                className="btn btn-danger"
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <div className="mini-spinner"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <FaTrash />
+                    Delete Post
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

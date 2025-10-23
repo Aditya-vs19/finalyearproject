@@ -351,6 +351,8 @@ body {
 .password-toggle-btn {
   position: absolute;
   right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: #94a3b8;
@@ -359,6 +361,9 @@ body {
   border-radius: 4px;
   transition: all 0.3s ease;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .password-toggle-btn:hover {
@@ -375,9 +380,14 @@ body {
 .email-input-icon {
   position: absolute;
   left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   color: #94a3b8;
   font-size: 1rem;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .auth-input-with-icon {
