@@ -33,10 +33,13 @@ export const ensureMutualFollowing = async (currentUserId, otherUserId) => {
     throw error;
   }
 
-  const currentFollowsOther = currentUser.following.some(
+  const currentFollowing = Array.isArray(currentUser.following) ? currentUser.following : [];
+  const otherFollowing = Array.isArray(otherUser.following) ? otherUser.following : [];
+
+  const currentFollowsOther = currentFollowing.some(
     (id) => id.toString() === otherUserId.toString()
   );
-  const otherFollowsCurrent = otherUser.following.some(
+  const otherFollowsCurrent = otherFollowing.some(
     (id) => id.toString() === currentUserId.toString()
   );
 
