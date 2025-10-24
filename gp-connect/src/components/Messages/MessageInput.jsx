@@ -33,12 +33,18 @@ const MessageInput = ({ onSend, disabled }) => {
     if (!trimmed || disabled) {
       return;
     }
+    
+    // Clear input immediately for better UX
+    setValue('');
+    setShowEmojiPicker(false);
+    
     try {
+      // Send message (optimistic update will show it immediately)
       await onSend(trimmed);
-      setValue('');
-      setShowEmojiPicker(false);
     } catch (error) {
-      // handled by caller
+      // If sending fails, restore the message text
+      setValue(trimmed);
+      // Error is already handled by the ChatProvider
     }
   };
 
@@ -62,6 +68,12 @@ const MessageInput = ({ onSend, disabled }) => {
             ref={inputRef}
             value={value}
             onChange={(event) => setValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                handleSubmit(event);
+              }
+            }}
             placeholder="Type your message…"
             className="dm-textarea"
             rows={1}

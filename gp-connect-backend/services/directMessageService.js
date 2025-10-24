@@ -116,15 +116,19 @@ export const persistEncryptedMessage = async ({
     throw error;
   }
 
-  const message = await Message.create({
-    conversationId: conversation._id,
-    sender: senderId,
-    encryptedText: trimmed,
-  });
-
-  conversation.lastMessage = trimmed;
-  conversation.updatedAt = new Date();
-  await conversation.save();
+  // Create message and update conversation in parallel for better performance
+  const [message] = await Promise.all([
+    Message.create({
+      conversationId: conversation._id,
+      sender: senderId,
+      encryptedText: trimmed,
+    }),
+    // Update conversation lastMessage and timestamp
+    conversation.updateOne({
+      lastMessage: trimmed,
+      updatedAt: new Date(),
+    })
+  ]);
 
   await message.populate('sender', 'fullName profilePic');
 

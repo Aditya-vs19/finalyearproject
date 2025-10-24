@@ -80,14 +80,26 @@ const ChatWindow = ({
         {messages?.map((message) => (
           <div
             key={message._id}
-            className={`dm-bubble-wrapper ${message.isMine ? 'me' : ''}`}
+            className={`dm-bubble-wrapper ${message.isMine ? 'me' : ''} ${message.status === 'failed' ? 'failed' : ''}`}
           >
-            <div className={`dm-bubble ${message.isMine ? 'me' : 'them'}`}>
+            <div className={`dm-bubble ${message.isMine ? 'me' : 'them'} ${message.status || ''}`}>
               {message.plaintext || 'Encrypted message'}
+              {message.status === 'failed' && (
+                <div className="dm-error-indicator" title={message.error}>
+                  ⚠️ Failed to send
+                </div>
+              )}
             </div>
             <div className="dm-bubble-meta">
               <span>{formatTimestamp(message.createdAt)}</span>
-              {message.isMine && <BsDot className="dm-bubble-dot" />}
+              {message.isMine && (
+                <>
+                  <BsDot className="dm-bubble-dot" />
+                  {message.status === 'sending' && <span className="dm-status-sending">⏳</span>}
+                  {message.status === 'sent' && <span className="dm-status-sent">✓</span>}
+                  {message.status === 'failed' && <span className="dm-status-failed">✗</span>}
+                </>
+              )}
             </div>
           </div>
         ))}

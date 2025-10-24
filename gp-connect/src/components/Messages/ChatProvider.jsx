@@ -100,10 +100,39 @@ export const ChatProvider = ({
     }
     setMessagesByConversation((prev) => {
       const existing = prev[conversationId] || [];
+      
+      // Check if message already exists (avoid duplicates)
       if (existing.some((item) => item._id === message._id)) {
         return prev;
       }
+      
+      // Don't add if it's from current user and we might have an optimistic version
+      const senderId = message?.sender?._id || message?.sender;
+      if (senderId?.toString() === currentUserId) {
+        // Check if we have a recent optimistic message with same content
+        const recentOptimistic = existing.find(item => 
+          item.status === 'sending' && 
+          item.plaintext === decryptMessage(message.encryptedText) &&
+          Math.abs(new Date(item.createdAt) - new Date(message.createdAt)) < 5000 // Within 5 seconds
+        );
+        
+        if (recentOptimistic) {
+          // Replace optimistic message with real one
+          const withoutOptimistic = existing.filter(item => item._id !== recentOptimistic._id);
+          const formatted = formatMessage(message, currentUserId);
+          formatted.status = 'sent';
+          const nextMessages = [...withoutOptimistic, formatted].sort(
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+          );
+          return {
+            ...prev,
+            [conversationId]: nextMessages,
+          };
+        }
+      }
+      
       const formatted = formatMessage(message, currentUserId);
+      formatted.status = 'received';
       const nextMessages = [...existing, formatted].sort(
         (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
       );
@@ -207,6 +236,51 @@ export const ChatProvider = ({
     }
     
     const encryptedText = encryptMessage(plainText);
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const now = new Date().toISOString();
+
+    // Create optimistic message for immediate display
+    const optimisticMessage = {
+      _id: tempId,
+      conversationId,
+      sender: {
+        _id: currentUserId,
+        fullName: currentUser?.fullName || 'You',
+        profilePic: currentUser?.profilePic || null,
+      },
+      encryptedText,
+      plaintext: plainText,
+      createdAt: now,
+      isMine: true,
+      status: 'sending', // Add status to track message state
+    };
+
+    // Immediately show the message in UI
+    setMessagesByConversation((prev) => {
+      const existing = prev[conversationId] || [];
+      const nextMessages = [...existing, optimisticMessage].sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
+      return {
+        ...prev,
+        [conversationId]: nextMessages,
+      };
+    });
+
+    // Update conversation list immediately
+    setConversations((prev) => {
+      const index = prev.findIndex((conversation) => conversation._id === conversationId);
+      if (index === -1) {
+        return prev;
+      }
+      const next = [...prev];
+      next[index] = {
+        ...next[index],
+        lastMessage: encryptedText,
+        updatedAt: now,
+      };
+      return sortConversations(next);
+    });
 
     const emitViaSocket = () =>
       new Promise((resolve, reject) => {
@@ -214,10 +288,16 @@ export const ChatProvider = ({
           reject(new Error('Socket disconnected'));
           return;
         }
+        
+        const timeout = setTimeout(() => {
+          reject(new Error('Socket timeout'));
+        }, 10000); // 10 second timeout
+
         socketRef.current.emit(
           'sendMessage',
           { conversationId, encryptedText },
           (response) => {
+            clearTimeout(timeout);
             if (response?.ok && response.message) {
               resolve(response.message);
             } else {
@@ -228,22 +308,50 @@ export const ChatProvider = ({
       });
 
     try {
-      let message;
+      let serverMessage;
       if (socketConnected) {
-        message = await emitViaSocket();
-        ingestMessage(conversationId, message);
+        serverMessage = await emitViaSocket();
       } else {
         const response = await chatAPI.sendMessage(conversationId, { encryptedText });
-        message = response.data?.message;
+        serverMessage = response.data?.message;
         if (response.data?.conversation) {
           upsertConversation(response.data?.conversation);
         }
-        if (message) {
-          ingestMessage(conversationId, message);
-        }
       }
-      return message;
+
+      // Replace optimistic message with server response
+      if (serverMessage) {
+        setMessagesByConversation((prev) => {
+          const existing = prev[conversationId] || [];
+          const withoutOptimistic = existing.filter(msg => msg._id !== tempId);
+          const formatted = formatMessage(serverMessage, currentUserId);
+          formatted.status = 'sent';
+          const nextMessages = [...withoutOptimistic, formatted].sort(
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+          );
+          return {
+            ...prev,
+            [conversationId]: nextMessages,
+          };
+        });
+      }
+
+      return serverMessage;
     } catch (error) {
+      // Mark optimistic message as failed
+      setMessagesByConversation((prev) => {
+        const existing = prev[conversationId] || [];
+        const updated = existing.map(msg => 
+          msg._id === tempId 
+            ? { ...msg, status: 'failed', error: error.message }
+            : msg
+        );
+        return {
+          ...prev,
+          [conversationId]: updated,
+        };
+      });
+
       const friendly = error?.response?.data?.message || error?.message || 'Failed to send message';
       toast.error(friendly);
       throw error;

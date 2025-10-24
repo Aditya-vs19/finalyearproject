@@ -86,8 +86,9 @@ export const messagesAPI = {
 export const chatAPI = {
   listConversations: () => API.get('/conversations'),
   getConversation: (conversationId) => API.get(`/conversations/${conversationId}`),
-  sendMessage: (conversationId, content) => API.post(`/conversations/${conversationId}/messages`, { content }),
-  getMessages: (conversationId) => API.get(`/conversations/${conversationId}/messages`),
+  getConversationWithUser: (userId) => API.get(`/conversations/${userId}`),
+  sendMessage: (conversationId, content) => API.post(`/messages/${conversationId}`, content),
+  getMessages: (conversationId) => API.get(`/messages/${conversationId}`),
   createConversation: (participantId) => API.post('/conversations', { participantId }),
 };
 
