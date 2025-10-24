@@ -4,6 +4,12 @@ import { communitiesAPI, profileAPI } from '../services/api.js';
 import socketService from '../services/socket.js';
 import { getProfilePicUrl, handleImageError } from '../utils/imageUtils.js';
 
+const getCommunityImageUrl = (imageName) => {
+  if (!imageName) return null;
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  return `${baseUrl.replace('/api', '')}/uploads/community-images/${imageName}`;
+};
+
 const MAX_VISIBLE_MEMBERS = 16;
 
 export default function CommonCommunity() {
@@ -12,6 +18,8 @@ export default function CommonCommunity() {
   const [activeCommunity, setActiveCommunity] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [listLoading, setListLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
   const [listError, setListError] = useState('');
@@ -46,6 +54,8 @@ export default function CommonCommunity() {
     setMessages([]);
     setChatError('');
     setNewMessage('');
+    setSelectedImage(null);
+    setImagePreview(null);
   };
 
   const loadCommunities = async () => {
@@ -175,22 +185,83 @@ export default function CommonCommunity() {
     }
   };
 
+  const handleImageSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert('Image size should be less than 5MB');
+        event.target.value = ''; // Reset input
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        event.target.value = ''; // Reset input
+        return;
+      }
+
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setImagePreview(e.target.result);
+      reader.onerror = () => {
+        alert('Error reading file');
+        setSelectedImage(null);
+        setImagePreview(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    // Reset file input
+    const fileInput = document.getElementById('image-upload');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
   const handleSendMessage = async (event) => {
     event.preventDefault();
 
-    if (!selectedCommunityId || !newMessage.trim() || isSending || !activeCommunity?.canPost) {
+    if (!selectedCommunityId || isSending || !activeCommunity?.canPost) {
+      return;
+    }
+
+    if (!newMessage.trim() && !selectedImage) {
       return;
     }
 
     const messageText = newMessage.trim();
+    const imageFile = selectedImage;
+    
     setNewMessage('');
+    setSelectedImage(null);
+    setImagePreview(null);
 
     try {
       setIsSending(true);
-      await communitiesAPI.sendMessage(selectedCommunityId, messageText);
+      
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('image', imageFile);
+        if (messageText) {
+          formData.append('content', messageText);
+        }
+        await communitiesAPI.sendImageMessage(selectedCommunityId, formData);
+      } else {
+        await communitiesAPI.sendMessage(selectedCommunityId, messageText);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       setNewMessage(messageText);
+      setSelectedImage(imageFile);
+      if (imageFile) {
+        const reader = new FileReader();
+        reader.onload = (e) => setImagePreview(e.target.result);
+        reader.readAsDataURL(imageFile);
+      }
       alert(error.response?.data?.message || 'Failed to send message. Please try again.');
     } finally {
       setIsSending(false);
@@ -658,7 +729,21 @@ export default function CommonCommunity() {
                           <div className="message-sender">{message.sender?.fullName || 'Unknown user'}</div>
                         )}
                         <div className="message-content">
-                          <div className="message-text">{message.content}</div>
+                          {message.messageType === 'image' && message.image && (
+                            <div className="message-image">
+                              <img 
+                                src={getCommunityImageUrl(message.image)}
+                                alt="Shared image"
+                                onClick={() => window.open(getCommunityImageUrl(message.image), '_blank')}
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          )}
+                          {message.content && (
+                            <div className="message-text">{message.content}</div>
+                          )}
                           <div className="message-time">{formatTime(message.timestamp)}</div>
                         </div>
                       </div>
@@ -671,23 +756,58 @@ export default function CommonCommunity() {
           </div>
 
           <div className="message-input-container">
+            {imagePreview && (
+              <div className="image-preview-container">
+                <div className="image-preview">
+                  <img src={imagePreview} alt="Preview" />
+                  <button 
+                    type="button" 
+                    className="remove-image-btn"
+                    onClick={handleRemoveImage}
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleSendMessage} className="message-form">
-              <input
-                type="text"
-                placeholder={
-                  activeCommunity?.isAnnouncement && !activeCommunity?.canPost
-                    ? 'Only admin can post announcements.'
-                    : 'Type a message...'
-                }
-                value={newMessage}
-                onChange={(event) => setNewMessage(event.target.value)}
-                disabled={isSending || !activeCommunity?.canPost}
-                className={`message-input${!activeCommunity?.canPost ? ' message-input-disabled' : ''}`}
-              />
+              <div className="message-input-wrapper">
+                <input
+                  type="text"
+                  placeholder={
+                    activeCommunity?.isAnnouncement && !activeCommunity?.canPost
+                      ? 'Only admin can post announcements.'
+                      : 'Type a message...'
+                  }
+                  value={newMessage}
+                  onChange={(event) => setNewMessage(event.target.value)}
+                  disabled={isSending || !activeCommunity?.canPost}
+                  className={`message-input${!activeCommunity?.canPost ? ' message-input-disabled' : ''}`}
+                />
+                {activeCommunity?.canPost && !activeCommunity?.isAnnouncement && (
+                  <div className="message-actions">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      disabled={isSending}
+                      style={{ display: 'none' }}
+                      id="image-upload"
+                    />
+                    <label 
+                      htmlFor="image-upload" 
+                      className={`image-upload-btn ${isSending ? 'disabled' : ''}`}
+                      title="Add image"
+                    >
+                      📷
+                    </label>
+                  </div>
+                )}
+              </div>
               <button
                 type="submit"
                 disabled={
-                  isSending || !newMessage.trim() || !activeCommunity?.canPost
+                  isSending || (!newMessage.trim() && !selectedImage) || !activeCommunity?.canPost
                 }
                 className="send-btn"
               >

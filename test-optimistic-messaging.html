@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimistic Messaging Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .message {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            background: #3a3a3a;
+        }
+        .status {
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        .sending { background: #4a4a2a; }
+        .sent { background: #2a4a2a; }
+        .failed { background: #4a2a2a; }
+        button {
+            background: #5C8DC5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #4a7ab5; }
+        input {
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background: #333;
+            color: white;
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Optimistic Messaging Test</h1>
+    
+    <div class="test-container">
+        <h2>Message Flow Test</h2>
+        <p>This simulates the optimistic update behavior:</p>
+        
+        <div>
+            <input type="text" id="messageInput" placeholder="Type a message..." />
+            <button onclick="sendTestMessage()">Send Message</button>
+            <button onclick="sendFailingMessage()">Send Failing Message</button>
+            <button onclick="clearMessages()">Clear</button>
+        </div>
+        
+        <div id="messages"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>Expected Behavior</h2>
+        <ul>
+            <li>✅ Message appears immediately when you click send (optimistic update)</li>
+            <li>✅ Status shows "sending" with ⏳ icon</li>
+            <li>✅ After server response, status changes to "sent" with ✓ icon</li>
+            <li>✅ If sending fails, status shows "failed" with ✗ icon</li>
+            <li>✅ Input clears immediately for better UX</li>
+            <li>✅ No delay between clicking send and seeing the message</li>
+        </ul>
+    </div>
+
+    <script>
+        let messageId = 1;
+        
+        function addMessage(text, status = 'sending') {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${status}`;
+            messageDiv.id = `msg-${messageId}`;
+            
+            const statusIcon = {
+                'sending': '⏳',
+                'sent': '✓',
+                'failed': '✗'
+            };
+            
+            messageDiv.innerHTML = `
+                <div>${text}</div>
+                <div class="status">${statusIcon[status]} ${status}</div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messageDiv.scrollIntoView({ behavior: 'smooth' });
+            
+            return messageId++;
+        }
+        
+        function updateMessageStatus(id, status) {
+            const messageDiv = document.getElementById(`msg-${id}`);
+            if (messageDiv) {
+                messageDiv.className = `message ${status}`;
+                const statusIcon = {
+                    'sending': '⏳',
+                    'sent': '✓',
+                    'failed': '✗'
+                };
+                messageDiv.querySelector('.status').innerHTML = `${statusIcon[status]} ${status}`;
+            }
+        }
+        
+        function sendTestMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            // Clear input immediately (optimistic UX)
+            input.value = '';
+            
+            // Add message immediately (optimistic update)
+            const id = addMessage(text, 'sending');
+            
+            // Simulate server response after delay
+            setTimeout(() => {
+                updateMessageStatus(id, 'sent');
+            }, Math.random() * 2000 + 500); // 0.5-2.5 seconds
+        }
+        
+        function sendFailingMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim() || 'This message will fail';
+            
+            // Clear input immediately
+            input.value = '';
+            
+            // Add message immediately
+            const id = addMessage(text, 'sending');
+            
+            // Simulate failure after delay
+            setTimeout(() => {
+                updateMessageStatus(id, 'failed');
+            }, Math.random() * 2000 + 1000);
+        }
+        
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+            messageId = 1;
+        }
+        
+        // Allow Enter key to send
+        document.getElementById('messageInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                sendTestMessage();
+            }
+        });
+    </script>
+</body>
+</html>

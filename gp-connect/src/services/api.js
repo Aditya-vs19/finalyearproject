@@ -77,6 +77,9 @@ export const communitiesAPI = {
   leaveCommunity: (communityId) => API.post(`/community/${communityId}/leave`),
   getCommunityMessages: (communityId) => API.get(`/community/${communityId}/messages`),
   sendMessage: (communityId, content) => API.post(`/community/${communityId}/messages`, { content }),
+  sendImageMessage: (communityId, formData) => API.post(`/community/${communityId}/messages`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
 export const messagesAPI = {

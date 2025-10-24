@@ -5,24 +5,46 @@
   margin: 0 auto;
   height: calc(100vh - 160px);
   min-height: 600px;
-  background: var(--settings-card-bg);
+  background: linear-gradient(135deg, var(--settings-card-bg) 0%, rgba(134, 134, 172, 0.02) 100%);
   backdrop-filter: blur(20px);
   border-radius: var(--settings-border-radius);
   overflow: hidden;
-  box-shadow: var(--settings-card-shadow);
+  box-shadow: var(--settings-card-shadow), 0 0 40px rgba(92, 141, 197, 0.05);
   border: 1px solid var(--settings-card-border);
+  position: relative;
+}
+
+.dm-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(134, 134, 172, 0.2) 50%, transparent 100%);
 }
 
 .dm-list {
   width: 35%;
   max-width: 400px;
   min-width: 320px;
-  background: var(--settings-inner-card-bg);
+  background: linear-gradient(135deg, var(--settings-inner-card-bg) 0%, rgba(134, 134, 172, 0.02) 100%);
   border-right: 1px solid var(--settings-card-border);
   padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  position: relative;
+}
+
+.dm-list::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent 0%, var(--settings-card-border) 50%, transparent 100%);
 }
 
 .dm-title-row {
@@ -36,12 +58,13 @@
   margin: 0;
   font-size: 1.3rem;
   font-weight: 700;
-  background: linear-gradient(45deg, #272757, #505081, #8686AC);
+  background: linear-gradient(45deg, #5C8DC5, #8686AC, #909EAE);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: gradientText 4s ease-in-out infinite;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .dm-connection-status {
@@ -50,17 +73,41 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(134, 134, 172, 0.05);
+  border: 1px solid rgba(134, 134, 172, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dm-connection-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: pulse 2s infinite;
 }
 
 .dm-connection-status.online {
   color: #8686AC;
+  background: rgba(134, 134, 172, 0.08);
+  border-color: rgba(134, 134, 172, 0.15);
+}
+
+.dm-connection-status.online::before {
+  background: #8686AC;
+  box-shadow: 0 0 6px rgba(134, 134, 172, 0.4);
 }
 
 .dm-search {
   position: relative;
   display: flex;
   align-items: center;
-  background: var(--bg-primary);
+  background: transparent;
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-secondary);
   border-radius: 12px;
@@ -69,8 +116,9 @@
 }
 
 .dm-search:focus-within {
-  border-color: var(--border-accent);
-  box-shadow: 0 0 0 3px rgba(39, 39, 87, 0.3);
+  border-color: rgba(92, 141, 197, 0.5);
+  box-shadow: 0 0 0 3px rgba(92, 141, 197, 0.15);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .dm-search-icon {
@@ -97,42 +145,76 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-secondary);
+  animation: slideIn 0.3s ease-out;
+}
+
+.dm-search-results-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
 }
 
 .dm-search-result {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-secondary);
+  background: rgba(134, 134, 172, 0.08);
+  border: 1px solid rgba(134, 134, 172, 0.15);
   border-radius: 12px;
   padding: 0.7rem 0.9rem;
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+}
+
+.dm-search-result::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(45deg, #8686AC, #5C8DC5);
+  border-radius: 12px 0 0 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .dm-search-result:hover {
-  background: var(--bg-secondary);
-  border-color: var(--border-accent);
+  background: rgba(134, 134, 172, 0.12);
+  border-color: rgba(134, 134, 172, 0.25);
   transform: translateY(-1px);
+}
+
+.dm-search-result:hover::before {
+  opacity: 1;
 }
 
 .dm-search-avatar {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: var(--primary-gradient);
+  background: linear-gradient(45deg, #8686AC, #5C8DC5);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: var(--text-primary);
-  border: 2px solid var(--border-primary);
+  color: white;
+  border: 2px solid rgba(134, 134, 172, 0.3);
+  box-shadow: 0 2px 8px rgba(134, 134, 172, 0.2);
 }
 
 .dm-search-name {
   font-size: 0.9rem;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -151,6 +233,33 @@
   padding-right: 0.25rem;
 }
 
+.dm-conversation-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dm-conversation-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dm-conversation-list::-webkit-scrollbar-thumb {
+  background: rgba(134, 134, 172, 0.2);
+  border-radius: 3px;
+}
+
+.dm-conversation-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(134, 134, 172, 0.3);
+}
+
+.dm-conversations-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
+}
+
 .msg-item {
   display: flex;
   align-items: center;
@@ -165,6 +274,20 @@
   text-align: left;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+}
+
+.msg-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--primary-gradient);
+  border-radius: 12px 0 0 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .msg-item:hover {
@@ -173,11 +296,19 @@
   transform: translateY(-1px);
 }
 
+.msg-item:hover::before {
+  opacity: 0.6;
+}
+
 .msg-item.selected {
   background: var(--primary-gradient);
   border-color: var(--accent-color);
   transform: translateX(8px);
   box-shadow: var(--primary-glow);
+}
+
+.msg-item.selected::before {
+  opacity: 1;
 }
 
 .msg-avatar {
@@ -293,8 +424,19 @@
 .dm-chat-header {
   padding: 1.2rem 1.8rem;
   border-bottom: 1px solid var(--settings-card-border);
-  background: var(--settings-inner-card-bg);
+  background: linear-gradient(135deg, var(--settings-inner-card-bg) 0%, rgba(134, 134, 172, 0.05) 100%);
   backdrop-filter: blur(20px);
+  position: relative;
+}
+
+.dm-chat-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 1.8rem;
+  right: 1.8rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--settings-card-border) 50%, transparent 100%);
 }
 
 .dm-chat-header-content {
@@ -339,6 +481,36 @@
   gap: 0.75rem;
   overflow-y: auto;
   background: var(--chat-body-bg);
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+.dm-chat-body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(180deg, rgba(134, 134, 172, 0.02) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.dm-chat-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dm-chat-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dm-chat-body::-webkit-scrollbar-thumb {
+  background: rgba(134, 134, 172, 0.2);
+  border-radius: 3px;
+}
+
+.dm-chat-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(134, 134, 172, 0.3);
 }
 
 .dm-bubble-wrapper {
@@ -346,6 +518,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
+  animation: slideIn 0.3s ease-out;
 }
 
 .dm-bubble-wrapper.me {
@@ -368,11 +541,14 @@
 .dm-bubble.them {
   background: var(--chat-bubble-bg);
   border-color: var(--chat-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .dm-bubble.me {
-  background: var(--chat-bubble-me-bg);
-  border-color: var(--chat-border-light);
+  background: linear-gradient(135deg, #5C8DC5 0%, #8686AC 100%);
+  border-color: rgba(92, 141, 197, 0.3);
+  color: white;
+  box-shadow: 0 2px 8px rgba(92, 141, 197, 0.2);
 }
 
 .dm-bubble-meta {
@@ -443,7 +619,6 @@
 }
 
 @keyframes pulse {
-
   0%,
   80%,
   100% {
@@ -457,11 +632,45 @@
   }
 }
 
+@keyframes gradientText {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .dm-input {
   padding: 1.2rem 1.8rem;
   border-top: 1px solid var(--chat-border);
-  background: var(--chat-input-bg);
+  background: linear-gradient(135deg, var(--chat-input-bg) 0%, rgba(134, 134, 172, 0.03) 100%);
   backdrop-filter: blur(20px);
+  position: relative;
+}
+
+.dm-input::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 1.8rem;
+  right: 1.8rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--chat-border) 50%, transparent 100%);
 }
 
 .dm-input-form {
@@ -483,12 +692,14 @@
   color: var(--text-primary);
   font-size: 0.95rem;
   transition: all 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .dm-textarea:focus {
   outline: none;
-  border-color: var(--border-accent);
-  box-shadow: 0 0 0 3px rgba(39, 39, 87, 0.2);
+  border-color: rgba(92, 141, 197, 0.5);
+  box-shadow: 0 0 0 3px rgba(92, 141, 197, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .dm-textarea::placeholder {
@@ -509,15 +720,16 @@
   color: var(--text-primary);
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .dm-emoji-btn:hover,
 .dm-send-btn:hover {
-  background: var(--primary-gradient);
+  background: linear-gradient(135deg, #5C8DC5 0%, #8686AC 100%);
   border-color: var(--border-accent);
   color: white;
-  transform: translateY(-1px);
-  box-shadow: var(--primary-glow);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(92, 141, 197, 0.3);
 }
 
 .dm-emoji-picker {

@@ -63,6 +63,7 @@ const ConversationsList = ({ onSelectConversation, onSelectUser }) => {
       </label>
       {normalizedSearch && (
         <div className="dm-search-results">
+          <div className="dm-search-results-header">Search Results</div>
           {filteredFollowing.length === 0 && (
             <div className="dm-search-hint">No followed users match that search.</div>
           )}
@@ -80,6 +81,9 @@ const ConversationsList = ({ onSelectConversation, onSelectUser }) => {
         </div>
       )}
       <div className="dm-conversation-list">
+        {conversations.length > 0 && (
+          <div className="dm-conversations-header">Recent Conversations</div>
+        )}
         {conversations.length === 0 && !normalizedSearch && (
           <div className="dm-search-hint">Start a conversation with someone you follow.</div>
         )}

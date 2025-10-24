@@ -31,7 +31,18 @@ const communitySchema = mongoose.Schema(
       },
       content: {
         type: String,
-        required: true
+        required: function() {
+          return !this.image;
+        }
+      },
+      image: {
+        type: String,
+        required: false
+      },
+      messageType: {
+        type: String,
+        enum: ['text', 'image'],
+        default: 'text'
       },
       timestamp: {
         type: Date,

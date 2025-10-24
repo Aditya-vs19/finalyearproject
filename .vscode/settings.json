@@ -1,4 +1,4 @@
 {
     "chat.agent.maxRequests": 100,
-    "kiroAgent.configureMCP": "Enabled"
+    "kiroAgent.configureMCP": "Disabled"
 }

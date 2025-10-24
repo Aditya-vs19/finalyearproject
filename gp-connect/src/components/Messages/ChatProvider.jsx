@@ -51,6 +51,7 @@ export const ChatProvider = ({
   const [presenceMap, setPresenceMap] = useState({});
   const [typingMap, setTypingMap] = useState({});
   const [initializationError, setInitializationError] = useState(null);
+  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
 
   const socketRef = useRef(null);
   const loadedConversationsRef = useRef(new Set());

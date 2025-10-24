@@ -125,6 +125,8 @@ const shapeCommunity = (community, userId, { includeMembers = false } = {}) => {
 const shapeMessage = (message, communityId) => ({
   _id: message._id?.toString(),
   content: message.content,
+  image: message.image,
+  messageType: message.messageType || 'text',
   timestamp: message.timestamp,
   sender: message.sender && message.sender._id
     ? {
@@ -331,15 +333,18 @@ export const getCommunityMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const { communityId } = req.params;
-    const { content } = req.body;
     const userId = req.user.id;
 
     if (!ensureValidObjectId(communityId)) {
       return res.status(400).json({ message: 'Invalid community id' });
     }
 
-    if (!content || content.trim().length === 0) {
-      return res.status(400).json({ message: 'Message content cannot be empty' });
+    // Check if it's an image upload or text message
+    const isImageUpload = req.file;
+    const content = req.body?.content || '';
+    
+    if (!isImageUpload && (!content || content.trim().length === 0)) {
+      return res.status(400).json({ message: 'Message content or image is required' });
     }
 
     const community = await Community.findById(communityId);
@@ -355,12 +360,19 @@ export const sendMessage = async (req, res) => {
       return res.status(403).json({ message: 'Only admin can post announcements.' });
     }
 
-    const trimmedContent = content.trim();
     const newMessage = {
       sender: req.user._id,
-      content: trimmedContent,
       timestamp: new Date(),
     };
+
+    if (isImageUpload) {
+      newMessage.image = req.file.filename;
+      newMessage.messageType = 'image';
+      newMessage.content = content ? content.trim() : '';
+    } else {
+      newMessage.content = content.trim();
+      newMessage.messageType = 'text';
+    }
 
     community.messages.push(newMessage);
     await community.save();
@@ -370,7 +382,9 @@ export const sendMessage = async (req, res) => {
 
     const shapedMessage = {
       _id: savedMessage._id.toString(),
-      content: savedMessage.content,
+      content: savedMessage.content || '',
+      image: savedMessage.image || null,
+      messageType: savedMessage.messageType || 'text',
       timestamp: savedMessage.timestamp,
       communityId: communityId.toString(),
       sender: sender
@@ -393,6 +407,7 @@ export const sendMessage = async (req, res) => {
 
     res.status(201).json(shapedMessage);
   } catch (error) {
+    console.error('Error sending message:', error);
     res.status(500).json({ message: error.message });
   }
 };
