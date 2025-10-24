@@ -4,6 +4,7 @@ import RegistrationPage from './components/RegisterPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ForgotPasswordOtpPage from './components/ForgotPasswordOtpPage';
 import OtpVerificationPage from './components/OtpVerificationPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import HomePage from './components/HomePage';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -17,7 +18,9 @@ function App() {
   const [showOtpVerification, setShowOtpVerification] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [showForgotPasswordOtp, setShowForgotPasswordOtp] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
 
   // Check for existing token on app load
   useEffect(() => {
@@ -59,6 +62,8 @@ function App() {
     setShowForgotPassword(false);
     setShowOtpVerification(false);
     setShowForgotPasswordOtp(false);
+    setShowResetPassword(false);
+    setResetToken('');
   };
 
   const handleLogin = () => {
@@ -81,9 +86,22 @@ function App() {
     setShowRegister(true);
   };
 
-  const handleForgotPasswordOtpSuccess = () => {
-    setIsLoggedIn(true);
+  const handleForgotPasswordOtpSuccess = (userData) => {
+    // Instead of logging in, show reset password page
+    const token = localStorage.getItem('token');
+    setResetToken(token);
     setShowForgotPasswordOtp(false);
+    setShowResetPassword(true);
+  };
+
+  const handlePasswordResetSuccess = () => {
+    // After successful password reset, go back to login
+    localStorage.removeItem('token'); // Remove the temporary OTP token
+    setShowResetPassword(false);
+    setShowForgotPassword(false);
+    setShowForgotPasswordOtp(false);
+    setForgotPasswordEmail('');
+    setResetToken('');
   };
 
   // Show loading spinner while checking authentication
@@ -205,6 +223,12 @@ function App() {
     <>
       {isLoggedIn ? (
         <HomePage onLogout={handleLogout} />
+      ) : showResetPassword ? (
+        <ResetPasswordPage
+          email={forgotPasswordEmail}
+          resetToken={resetToken}
+          onPasswordReset={handlePasswordResetSuccess}
+        />
       ) : showOtpVerification ? (
         <OtpVerificationPage
           email={userEmail}
@@ -228,7 +252,9 @@ function App() {
               setShowForgotPassword(false);
               setShowRegister(false);
               setShowForgotPasswordOtp(false);
+              setShowResetPassword(false);
               setForgotPasswordEmail('');
+              setResetToken('');
             }
             if (page === 'otp') {
               const emailFromPayload = payload?.email || '';
@@ -250,13 +276,17 @@ function App() {
             setShowRegister(true);
             setShowForgotPassword(false);
             setShowForgotPasswordOtp(false);
+            setShowResetPassword(false);
             setForgotPasswordEmail('');
+            setResetToken('');
           }}
           onSwitchToForgotPassword={() => {
             setShowForgotPassword(true);
             setShowRegister(false);
             setShowForgotPasswordOtp(false);
+            setShowResetPassword(false);
             setForgotPasswordEmail('');
+            setResetToken('');
           }}
         />
       )}

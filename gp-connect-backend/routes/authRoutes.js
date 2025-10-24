@@ -6,6 +6,7 @@ import {
 	forgotPasswordOtp,
 	resendPasswordOtp,
 	verifyPasswordOtpLogin,
+	resetPasswordAfterOtp,
 } from '../controllers/authController.js';
 import { validateRegistrationInput } from '../middleware/registrationValidation.js';
 
@@ -17,5 +18,6 @@ router.post('/login', authUser);
 router.post('/forgot-password', forgotPasswordOtp);
 router.post('/forgot-password/resend', resendPasswordOtp);
 router.post('/forgot-password/verify', verifyPasswordOtpLogin);
+router.post('/reset-password', resetPasswordAfterOtp);
 
 export default router;

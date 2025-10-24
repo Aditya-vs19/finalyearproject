@@ -1,4 +1,5 @@
 import asyncHandler from 'express-async-handler';
+import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import generateToken from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
@@ -251,6 +252,58 @@ const verifyPasswordOtpLogin = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Reset password after OTP verification
+// @route   POST /api/auth/reset-password
+// @access  Public (but requires valid reset token from OTP verification)
+const resetPasswordAfterOtp = asyncHandler(async (req, res) => {
+  const { email, newPassword, token } = req.body || {};
+
+  if (!email || !newPassword || !token) {
+    return res.status(400).json({ message: 'Email, new password, and token are required' });
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Verify the token is valid and from OTP verification
+  let decoded;
+  try {
+    const secret = process.env.JWT_SECRET || 'fallback_jwt_secret_key_for_development_only';
+    decoded = jwt.verify(token, secret);
+    
+    // Check if token was issued via OTP method
+    if (decoded.authMethod !== 'otp') {
+      return res.status(403).json({ message: 'Invalid reset token' });
+    }
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid or expired reset token' });
+  }
+
+  const user = await User.findOne({ email: normalizedEmail });
+
+  if (!user || !user.isVerified) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  // Ensure the token belongs to this user
+  if (user._id.toString() !== decoded.id) {
+    return res.status(403).json({ message: 'Token does not match user' });
+  }
+
+  // Validate password strength
+  if (newPassword.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+  }
+
+  // Update password (will be hashed by pre-save middleware)
+  user.password = newPassword;
+  await user.save();
+
+  return res.status(200).json({
+    message: 'Password reset successful. You can now login with your new password.',
+    success: true,
+  });
+});
+
 export {
   registerUser,
   verifyOtp,
@@ -258,4 +311,5 @@ export {
   forgotPasswordOtp,
   resendPasswordOtp,
   verifyPasswordOtpLogin,
+  resetPasswordAfterOtp,
 };
