@@ -55,12 +55,24 @@ export default function Feed({ onNavigateToProfile }) {
         console.log('🔍 Fetched posts:', fetchedPosts);
         console.log('📊 Number of posts:', fetchedPosts.length);
         console.log('👤 Current user ID:', currentUserData?._id);
-        setPosts(fetchedPosts);
+        
+        // Filter out posts with missing or deleted users
+        const validPosts = fetchedPosts.filter(post => {
+          const user = post.userId || post.user;
+          if (!user || !user._id) {
+            console.warn('Filtering out post with missing user:', post._id);
+            return false;
+          }
+          return true;
+        });
+        
+        console.log('✅ Valid posts after filtering:', validPosts.length);
+        setPosts(validPosts);
         
         // Initialize post states for each post with real data
         const initialStates = {};
         const currentUserId = currentUserData?._id; // Use the freshly fetched data, not state
-        fetchedPosts.forEach(post => {
+        validPosts.forEach(post => {
           // Check if current user has liked this post
           const isLiked = currentUserId && post.likes && post.likes.some(like => {
             if (typeof like === 'object' && like._id) {
@@ -306,6 +318,12 @@ export default function Feed({ onNavigateToProfile }) {
         const postState = postStates[post._id];
         const user = post.userId || post.user;
         
+        // Skip posts with deleted/missing users
+        if (!user || !user._id) {
+          console.warn('Skipping post with missing user data:', post._id);
+          return null;
+        }
+        
         return (
           <div key={post._id} className="post-card">
             <div className="post-header">
@@ -319,15 +337,15 @@ export default function Feed({ onNavigateToProfile }) {
                   />
                 ) : null}
                 <span style={{ display: user.profilePic ? 'none' : 'block' }}>
-                  {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
+                  {user && user.fullName ? user.fullName[0].toUpperCase() : 'U'}
                 </span>
               </div>
               <span 
                 className="username clickable-username" 
                 onClick={() => handleUsernameClick(user._id)}
-                title={`Click to view ${user.fullName}'s profile`}
+                title={`Click to view ${user.fullName || 'User'}'s profile`}
               >
-                {user.fullName}
+                {user.fullName || 'Unknown User'}
               </span>
             </div>
             {post.image && (
@@ -343,9 +361,9 @@ export default function Feed({ onNavigateToProfile }) {
                 <span 
                   className="username clickable-username" 
                   onClick={() => handleUsernameClick(user._id)}
-                  title={`Click to view ${user.fullName}'s profile`}
+                  title={`Click to view ${user.fullName || 'User'}'s profile`}
                 >
-                  {user.fullName}
+                  {user.fullName || 'Unknown User'}
                 </span> {post.caption}
               </p>
               

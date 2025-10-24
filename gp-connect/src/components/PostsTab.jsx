@@ -3,7 +3,7 @@ import { FaPlus, FaEdit, FaTrash, FaImage, FaTimes, FaExclamationTriangle } from
 import { postsAPI } from '../services/api';
 import './PostsTab.css';
 
-const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
+const PostsTab = ({ userProfile, isOwnProfile }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -18,6 +18,7 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, postId: null, postCaption: '' });
   const [deleting, setDeleting] = useState(null);
 
+
   useEffect(() => {
     fetchPosts();
   }, [userProfile]);
@@ -25,11 +26,26 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
   const fetchPosts = async () => {
     try {
       setLoading(true);
+
+      // Check if userProfile exists
+      if (!userProfile || !userProfile._id) {
+        setMessage({ type: 'error', text: 'User profile not found' });
+        return;
+      }
+
       const response = await postsAPI.getUserPosts(userProfile._id);
-      setPosts(response.data);
+      const fetchedPosts = response.data || [];
+      setPosts(fetchedPosts);
+
     } catch (error) {
       console.error('Error fetching posts:', error);
-      setMessage({ type: 'error', text: 'Failed to load posts' });
+      if (error.response?.status === 404) {
+        setMessage({ type: 'error', text: 'User not found' });
+      } else if (error.response?.status === 401) {
+        setMessage({ type: 'error', text: 'Please log in again' });
+      } else {
+        setMessage({ type: 'error', text: 'Failed to load posts' });
+      }
     } finally {
       setLoading(false);
     }
@@ -50,7 +66,7 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
         ...prev,
         image: file
       }));
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target.result);
@@ -85,9 +101,9 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
       setEditingPost(null);
       fetchPosts();
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to save post' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to save post'
       });
     } finally {
       setSubmitting(false);
@@ -115,16 +131,16 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
   const handleDeleteConfirm = async () => {
     const postId = deleteConfirm.postId;
     setDeleting(postId);
-    
+
     try {
       await postsAPI.deletePost(postId);
       setMessage({ type: 'success', text: 'Post deleted successfully!' });
       fetchPosts();
       setDeleteConfirm({ show: false, postId: null, postCaption: '' });
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.message || 'Failed to delete post' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to delete post'
       });
     } finally {
       setDeleting(null);
@@ -141,6 +157,8 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
     setFormData({ caption: '', image: null });
     setImagePreview(null);
   };
+
+
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -170,7 +188,7 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
           {isOwnProfile ? 'My Posts' : `${userProfile.fullName}'s Posts`}
         </h3>
         {isOwnProfile && (
-          <button 
+          <button
             className="create-post-btn"
             onClick={() => setShowCreateForm(true)}
           >
@@ -193,7 +211,7 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
               <FaTimes />
             </button>
           </div>
-          
+
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <textarea
@@ -220,8 +238,8 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
               {imagePreview && (
                 <div className="image-preview">
                   <img src={imagePreview} alt="Preview" />
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => {
                       setImagePreview(null);
                       setFormData(prev => ({ ...prev, image: null }));
@@ -235,16 +253,16 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
             </div>
 
             <div className="form-actions">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={handleCancel}
                 className="btn btn-secondary"
                 disabled={submitting}
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary"
                 disabled={submitting}
               >
@@ -260,7 +278,7 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
           <div className="no-posts">
             <p>{isOwnProfile ? "You haven't created any posts yet." : "No posts yet."}</p>
             {isOwnProfile && (
-              <button 
+              <button
                 className="btn btn-primary"
                 onClick={() => setShowCreateForm(true)}
               >
@@ -286,38 +304,38 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
                     <p className="post-time">{formatDate(post.createdAt)}</p>
                   </div>
                 </div>
-                {isOwnProfile && (
-                  <div className="post-actions">
-                    <button 
-                      onClick={() => handleEdit(post)}
-                      className="action-btn edit-btn"
-                      title="Edit post"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteClick(post)}
-                      className="action-btn delete-btn"
-                      title="Delete post"
-                      disabled={deleting === post._id}
-                    >
-                      {deleting === post._id ? (
-                        <div className="mini-spinner"></div>
-                      ) : (
-                        <FaTrash />
-                      )}
-                    </button>
-                  </div>
-                )}
+                <div className="post-actions">
+                  <button
+                    onClick={() => handleEdit(post)}
+                    className="action-btn edit-btn"
+                    title="Edit post"
+                    style={{ display: isOwnProfile ? 'flex' : 'none' }}
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(post)}
+                    className="action-btn delete-btn"
+                    title="Delete post"
+                    disabled={deleting === post._id}
+                    style={{ display: isOwnProfile ? 'flex' : 'none' }}
+                  >
+                    {deleting === post._id ? (
+                      <div className="mini-spinner"></div>
+                    ) : (
+                      "DELETE"
+                    )}
+                  </button>
+                </div>
               </div>
-              
+
               <div className="post-content">
                 <p>{post.caption}</p>
                 {post.image && (
                   <div className="post-image">
-                    <img 
-                      src={`http://localhost:5000${post.image}`} 
-                      alt="Post" 
+                    <img
+                      src={`http://localhost:5000${post.image}`}
+                      alt="Post"
                     />
                   </div>
                 )}
@@ -340,27 +358,27 @@ const PostsTab = ({ userProfile, currentUser, isOwnProfile }) => {
                 <FaTimes />
               </button>
             </div>
-            
+
             <div className="modal-body">
               <p>Are you sure you want to delete this post? This action cannot be undone.</p>
               {deleteConfirm.postCaption && (
                 <div className="post-preview">
-                  <strong>Post:</strong> "{deleteConfirm.postCaption.length > 100 
-                    ? deleteConfirm.postCaption.substring(0, 100) + '...' 
+                  <strong>Post:</strong> "{deleteConfirm.postCaption.length > 100
+                    ? deleteConfirm.postCaption.substring(0, 100) + '...'
                     : deleteConfirm.postCaption}"
                 </div>
               )}
             </div>
-            
+
             <div className="modal-actions">
-              <button 
+              <button
                 onClick={handleDeleteCancel}
                 className="btn btn-secondary"
                 disabled={deleting}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleDeleteConfirm}
                 className="btn btn-danger"
                 disabled={deleting}

@@ -5,6 +5,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed": "node seedCommunities.js",
+    "cleanup": "node scripts/cleanupDeletedUsers.js",
     "test": "vitest run"
   },
   "name": "gp-connect-backend",

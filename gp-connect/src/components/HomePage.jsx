@@ -63,12 +63,21 @@ export default function HomePage({ onLogout }) {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
+        console.log('HomePage: Fetching current user...');
         const response = await profileAPI.getCurrentUserProfile();
-        setCurrentUser(response.data.user);
+        console.log('HomePage: Current user response:', response.data);
+        
+        if (response.data && response.data.user) {
+          setCurrentUser(response.data.user);
+          console.log('HomePage: Current user set successfully');
+        } else {
+          console.error('HomePage: Invalid user data structure:', response.data);
+        }
       } catch (error) {
-        console.error('Error fetching current user:', error);
+        console.error('HomePage: Error fetching current user:', error);
         // If there's an authentication error, redirect to login
         if (error.response?.status === 401) {
+          console.log('HomePage: Authentication error, removing token and reloading');
           localStorage.removeItem('token');
           window.location.reload();
         }

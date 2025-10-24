@@ -426,7 +426,10 @@
   border-bottom: 1px solid var(--settings-card-border);
   background: linear-gradient(135deg, var(--settings-inner-card-bg) 0%, rgba(134, 134, 172, 0.05) 100%);
   backdrop-filter: blur(20px);
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .dm-chat-header::after {
@@ -480,9 +483,12 @@
   flex-direction: column;
   gap: 0.75rem;
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--chat-body-bg);
   position: relative;
   scroll-behavior: smooth;
+  min-height: 0;
+  max-height: calc(100vh - 300px);
 }
 
 .dm-chat-body::before {
@@ -497,20 +503,25 @@
 }
 
 .dm-chat-body::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .dm-chat-body::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(134, 134, 172, 0.05);
+  border-radius: 4px;
+  margin: 4px 0;
 }
 
 .dm-chat-body::-webkit-scrollbar-thumb {
-  background: rgba(134, 134, 172, 0.2);
-  border-radius: 3px;
+  background: rgba(134, 134, 172, 0.3);
+  border-radius: 4px;
+  border: 1px solid rgba(134, 134, 172, 0.1);
+  transition: all 0.3s ease;
 }
 
 .dm-chat-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(134, 134, 172, 0.3);
+  background: rgba(134, 134, 172, 0.5);
+  border-color: rgba(134, 134, 172, 0.2);
 }
 
 .dm-bubble-wrapper {
@@ -660,7 +671,10 @@
   border-top: 1px solid var(--chat-border);
   background: linear-gradient(135deg, var(--chat-input-bg) 0%, rgba(134, 134, 172, 0.03) 100%);
   backdrop-filter: blur(20px);
-  position: relative;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .dm-input::before {
@@ -862,6 +876,10 @@
     background: rgba(30, 41, 59, 0.9);
     border-bottom: 1px solid rgba(92, 141, 197, 0.2);
     border-radius: 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-shrink: 0;
   }
 
   .dm-header-name {
@@ -881,7 +899,11 @@
     background: transparent;
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    min-height: 0;
+    max-height: calc(100vh - 250px);
+    scroll-behavior: smooth;
   }
 
   .dm-bubble {
@@ -917,6 +939,10 @@
     background: rgba(30, 41, 59, 0.9);
     border-top: 1px solid rgba(92, 141, 197, 0.2);
     border-radius: 0 0 16px 16px;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    flex-shrink: 0;
   }
 
   .dm-input-form {
@@ -992,18 +1018,28 @@
   /* Mobile scroll improvements */
   .dm-conversation-list::-webkit-scrollbar,
   .dm-chat-body::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
   }
 
   .dm-conversation-list::-webkit-scrollbar-track,
   .dm-chat-body::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(92, 141, 197, 0.1);
+    border-radius: 3px;
+    margin: 2px 0;
   }
 
   .dm-conversation-list::-webkit-scrollbar-thumb,
   .dm-chat-body::-webkit-scrollbar-thumb {
-    background: rgba(92, 141, 197, 0.3);
-    border-radius: 2px;
+    background: rgba(92, 141, 197, 0.4);
+    border-radius: 3px;
+    border: 1px solid rgba(92, 141, 197, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .dm-conversation-list::-webkit-scrollbar-thumb:hover,
+  .dm-chat-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(92, 141, 197, 0.6);
+    border-color: rgba(92, 141, 197, 0.3);
   }
 
   /* Mobile error states */
@@ -1030,4 +1066,411 @@
     text-align: center;
     padding: 2rem 1rem;
   }
+}
+/
+* Mobile Navigation Styles */
+.dm-container.dm-mobile {
+  height: 100vh;
+  border-radius: 0;
+  max-width: 100%;
+  margin: 0;
+  background: var(--settings-card-bg);
+  box-shadow: none;
+  border: none;
+}
+
+.dm-mobile-conversations {
+  width: 100%;
+  height: 100vh;
+  background: var(--settings-card-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.dm-mobile-conversations .dm-list {
+  width: 100%;
+  max-width: 100%;
+  min-width: auto;
+  border-right: none;
+  padding: 1rem;
+  background: var(--settings-card-bg);
+  height: 100vh;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.dm-mobile-conversations .dm-title-row {
+  flex-shrink: 0;
+  margin-bottom: 1.5rem;
+}
+
+.dm-mobile-conversations .dm-title {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  text-align: left;
+  margin: 0;
+  font-weight: 700;
+}
+
+.dm-mobile-conversations .dm-connection-status {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--settings-inner-card-bg);
+  border: 1px solid var(--settings-inner-card-border);
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+}
+
+.dm-mobile-conversations .dm-search {
+  background: var(--settings-inner-card-bg);
+  border: 1px solid var(--settings-inner-card-border);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.dm-mobile-conversations .dm-search-input {
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.dm-mobile-conversations .dm-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.dm-mobile-conversations .dm-conversation-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  padding-right: 0;
+  gap: 0;
+}
+
+.dm-mobile-conversations .dm-conversations-header {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.dm-mobile-conversations .dm-search-results {
+  flex-shrink: 0;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--settings-inner-card-border);
+}
+
+.dm-mobile-conversations .dm-search-results-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.dm-mobile-conversations .dm-search-result {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--settings-inner-card-bg);
+  border: 1px solid var(--settings-inner-card-border);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+
+.dm-mobile-conversations .dm-search-result:hover,
+.dm-mobile-conversations .dm-search-result:active {
+  background: var(--settings-card-bg);
+  border-color: var(--settings-card-border);
+}
+
+.dm-mobile-conversations .dm-search-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: white;
+  border: 2px solid var(--border-primary);
+}
+
+.dm-mobile-conversations .dm-search-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.dm-mobile-conversations .dm-search-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 1rem;
+  text-align: center;
+}
+
+.dm-mobile-conversations .msg-item {
+  padding: 1rem;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--settings-inner-card-border);
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  flex-shrink: 0;
+}
+
+.dm-mobile-conversations .msg-item:hover,
+.dm-mobile-conversations .msg-item:active {
+  background: var(--settings-inner-card-bg);
+}
+
+.dm-mobile-conversations .msg-item:last-child {
+  border-bottom: none;
+}
+
+.dm-mobile-conversations .msg-avatar {
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--border-primary);
+  background: var(--primary-gradient);
+}
+
+.dm-mobile-conversations .msg-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dm-mobile-conversations .msg-preview {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+.dm-mobile-chat {
+  width: 100%;
+  height: 100vh;
+  background: var(--settings-card-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dm-mobile-chat .dm-chat {
+  height: 100vh;
+  background: var(--settings-card-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dm-mobile-chat .dm-chat-header {
+  padding: 1rem 1.2rem;
+  background: var(--settings-inner-card-bg);
+  border-bottom: 1px solid var(--settings-card-border);
+  border-radius: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.dm-mobile-chat .dm-chat-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dm-back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border-secondary);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  font-size: 1.2rem;
+}
+
+.dm-back-button:hover,
+.dm-back-button:active {
+  background: var(--settings-inner-card-bg);
+  border-color: var(--border-accent);
+  transform: scale(0.95);
+}
+
+.dm-mobile-chat .dm-header-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dm-mobile-chat .dm-header-meta {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.dm-mobile-chat .dm-chat-body {
+  padding: 1rem;
+  gap: 0.8rem;
+  background: var(--chat-body-bg);
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+  scroll-behavior: smooth;
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-mobile-chat .dm-bubble {
+  max-width: 85%;
+  padding: 1rem 1.2rem;
+  border-radius: 18px;
+  font-size: 1rem;
+  line-height: 1.5;
+  word-break: break-word;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dm-mobile-chat .dm-bubble.them {
+  background: var(--chat-bubble-bg);
+  border: 1px solid var(--chat-border);
+  color: var(--text-primary);
+}
+
+.dm-mobile-chat .dm-bubble.me {
+  background: linear-gradient(135deg, #5C8DC5 0%, #8686AC 100%);
+  border: 1px solid rgba(92, 141, 197, 0.3);
+  color: white;
+}
+
+.dm-mobile-chat .dm-bubble-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+.dm-mobile-chat .dm-input {
+  padding: 1rem 1.2rem;
+  background: var(--chat-input-bg);
+  border-top: 1px solid var(--chat-border);
+  border-radius: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.dm-mobile-chat .dm-textarea {
+  border: 1px solid var(--border-secondary);
+  border-radius: 20px;
+  padding: 1rem 1.2rem;
+  min-height: 44px;
+  max-height: 120px;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  resize: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dm-mobile-chat .dm-textarea:focus {
+  border-color: rgba(92, 141, 197, 0.5);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: 0 0 0 3px rgba(92, 141, 197, 0.15);
+}
+
+.dm-mobile-chat .dm-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.dm-mobile-chat .dm-emoji-btn,
+.dm-mobile-chat .dm-send-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border-secondary);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: all 0.3s ease;
+}
+
+.dm-mobile-chat .dm-emoji-btn:active,
+.dm-mobile-chat .dm-send-btn:active {
+  transform: scale(0.9);
+  transition: transform 0.1s ease;
+}
+
+.dm-mobile-chat .dm-emoji-btn:hover,
+.dm-mobile-chat .dm-send-btn:hover {
+  background: linear-gradient(135deg, #5C8DC5 0%, #909EAE 100%);
+  border-color: rgba(92, 141, 197, 0.4);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(92, 141, 197, 0.3);
+}
+
+/* Mobile typing indicator */
+.dm-mobile-chat .dm-bubble.typing {
+  background: var(--settings-inner-card-bg);
+  border: 1px solid var(--settings-inner-card-border);
+  padding: 1rem 1.2rem;
+}
+
+.dm-mobile-chat .dm-typing-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--text-muted);
+}
+
+/* Mobile scroll improvements - only for chat body */
+.dm-mobile-chat .dm-chat-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dm-mobile-chat .dm-chat-body::-webkit-scrollbar-track {
+  background: rgba(134, 134, 172, 0.1);
+  border-radius: 3px;
+  margin: 2px 0;
+}
+
+.dm-mobile-chat .dm-chat-body::-webkit-scrollbar-thumb {
+  background: rgba(134, 134, 172, 0.3);
+  border-radius: 3px;
+  border: 1px solid rgba(134, 134, 172, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dm-mobile-chat .dm-chat-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(134, 134, 172, 0.5);
+  border-color: rgba(134, 134, 172, 0.2);
 }

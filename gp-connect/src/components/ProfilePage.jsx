@@ -61,7 +61,17 @@ const ProfilePage = ({ userProfile, onBackToHome, onLogout, onStartChat, isMobil
           setProfilePicPreview(getProfilePicUrl(loggedInUser.profilePic));
         }
       } catch (err) {
-        setError(err.message || 'Failed to load profile');
+        console.error('Profile loading error:', err);
+        if (err.response?.status === 401 || err.response?.status === 404) {
+          // User doesn't exist or token is invalid
+          setError('User not found. Please log in again.');
+          // Optionally trigger logout
+          if (onLogout) {
+            setTimeout(() => onLogout(), 2000);
+          }
+        } else {
+          setError(err.message || 'Failed to load profile');
+        }
       } finally {
         setLoading(false);
       }

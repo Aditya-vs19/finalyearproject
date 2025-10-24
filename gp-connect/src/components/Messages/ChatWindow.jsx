@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { BsDot } from 'react-icons/bs';
+import { IoArrowBack } from 'react-icons/io5';
 import MessageInput from './MessageInput.jsx';
+import { decryptMessage } from '../../utils/chatEncryption.js';
 
 const formatTimestamp = (value) => {
   if (!value) {
@@ -31,6 +33,8 @@ const ChatWindow = ({
   typing,
   onSend,
   socketConnected,
+  onBack,
+  isMobile,
 }) => {
   const bottomRef = useRef(null);
 
@@ -69,6 +73,11 @@ const ChatWindow = ({
     <section className="dm-chat">
       <header className="dm-chat-header">
         <div className="dm-chat-header-content">
+          {isMobile && onBack && (
+            <button className="dm-back-button" onClick={onBack} type="button">
+              <IoArrowBack />
+            </button>
+          )}
           <span className={`dm-header-dot ${presence?.online ? 'online' : ''}`} />
           <div className="dm-header-info">
             <span className="dm-header-name">{otherUser?.fullName || 'Conversation'}</span>

@@ -25,32 +25,51 @@ function App() {
   // Check for existing token on app load
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('App loading - token exists:', !!token);
+    
     if (token) {
       // Verify token is valid by making a test API call
       const verifyToken = async () => {
         try {
+          console.log('Verifying token...');
           const response = await fetch('http://localhost:5000/api/profile/me', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
           });
           
+          console.log('Token verification response status:', response.status);
+          
           if (response.ok) {
-            setIsLoggedIn(true);
+            const userData = await response.json();
+            console.log('User data received:', userData);
+            
+            // Check if user data exists and is valid
+            if (userData && userData.user && userData.user._id) {
+              console.log('Valid user data, logging in');
+              setIsLoggedIn(true);
+            } else {
+              // User data is missing or invalid, remove token
+              console.log('User data missing or invalid, logging out');
+              localStorage.removeItem('token');
+            }
           } else {
-            // Token is invalid, remove it
+            // Token is invalid or user doesn't exist, remove it
+            console.log('Token verification failed, status:', response.status);
             localStorage.removeItem('token');
           }
         } catch (error) {
           console.error('Token verification failed:', error);
           localStorage.removeItem('token');
         } finally {
+          console.log('Setting loading to false');
           setIsLoading(false);
         }
       };
       
       verifyToken();
     } else {
+      console.log('No token found, setting loading to false');
       setIsLoading(false);
     }
   }, []);
