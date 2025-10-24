@@ -1,0 +1,234 @@
+/* PrivatePostsLock Component Styles */
+.private-posts-lock {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(92, 141, 197, 0.2);
+  border-radius: var(--settings-border-radius, 20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(92, 141, 197, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.private-posts-lock::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(92, 141, 197, 0.6), transparent);
+}
+
+.lock-content {
+  text-align: center;
+  padding: 3rem 2rem;
+  max-width: 400px;
+}
+
+.lock-icon-container {
+  margin-bottom: 2rem;
+}
+
+.lock-icon {
+  font-size: 4rem;
+  color: rgba(255, 255, 255, 0.4);
+  opacity: 0.8;
+  animation: lockPulse 2s ease-in-out infinite;
+}
+
+@keyframes lockPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.6;
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.3));
+  }
+}
+
+.lock-message {
+  margin-bottom: 2.5rem;
+}
+
+.lock-message h3 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.lock-message p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.follow-unlock-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #5C8DC5 0%, #909EAE 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--settings-border-radius, 20px);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  min-width: 180px;
+  margin: 0 auto;
+}
+
+.follow-unlock-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #909EAE 0%, #5C8DC5 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.follow-unlock-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+/* Loading state for follow button */
+.follow-unlock-btn:disabled::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .private-posts-lock {
+    min-height: 300px;
+    background: rgba(51, 65, 85, 0.6);
+    border: 1px solid rgba(92, 141, 197, 0.2);
+    border-radius: 16px;
+    margin: 0 0.75rem;
+  }
+
+  .lock-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .lock-icon {
+    font-size: 3rem;
+  }
+
+  .lock-message h3 {
+    font-size: 1.3rem;
+  }
+
+  .lock-message p {
+    font-size: 1rem;
+  }
+
+  .follow-unlock-btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    min-width: auto;
+    /* Enhanced mobile touch target */
+    min-height: 48px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .follow-unlock-btn:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Dark theme adjustments */
+@media (prefers-color-scheme: dark) {
+  .private-posts-lock {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(92, 141, 197, 0.3);
+  }
+
+  .lock-icon {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .lock-message h3 {
+    color: #f8fafc;
+  }
+
+  .lock-message p {
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+/* Accessibility improvements */
+.follow-unlock-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(92, 141, 197, 0.3), 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.follow-unlock-btn:focus:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .private-posts-lock {
+    border: 2px solid rgba(92, 141, 197, 0.8);
+  }
+
+  .lock-icon {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .lock-message h3,
+  .lock-message p {
+    color: #ffffff;
+  }
+
+  .follow-unlock-btn {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .lock-icon {
+    animation: none;
+  }
+
+  .follow-unlock-btn {
+    transition: none;
+  }
+
+  .follow-unlock-btn:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .follow-unlock-btn:disabled::before {
+    animation: none;
+  }
+}

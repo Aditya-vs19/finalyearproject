@@ -542,9 +542,34 @@ export default function CommonCommunity() {
                   <div className="community-card-header">
                     <div className="community-avatar-large">{community.avatar}</div>
                     <div className="community-card-info">
-                      <h2>{community.name}</h2>
-                      {community.isAnnouncement && <span className="official-badge">Official</span>}
+                      <div className="community-title-row">
+                        <h2>{community.name}</h2>
+                        <div className="community-badges">
+                          {community.isAnnouncement && <span className="official-badge">Official</span>}
+                          {community.adminOnly && <span className="admin-only-badge">Admin Only</span>}
+                          {community.userIsAdmin && <span className="user-admin-badge">You're Admin</span>}
+                        </div>
+                      </div>
                       <p>{community.description}</p>
+                      {community.departmentRestriction && !community.isUnrestricted && (
+                        <div className="department-restriction">
+                          <span className="restriction-icon">🏛️</span>
+                          <span className="restriction-text">
+                            {community.departmentInfo?.departmentMatch 
+                              ? `${community.departmentRestriction} Department` 
+                              : `Restricted to ${community.departmentRestriction} Department`}
+                          </span>
+                          {!community.departmentInfo?.departmentMatch && (
+                            <span className="restriction-status not-eligible">Not Eligible</span>
+                          )}
+                        </div>
+                      )}
+                      {community.helpMessage && (
+                        <div className="help-message">
+                          <span className="help-icon">ℹ️</span>
+                          <span>{community.helpMessage}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="community-card-footer">
@@ -573,14 +598,20 @@ export default function CommonCommunity() {
                       </div>
                     ) : (
                       <button
-                        className="join-btn"
+                        className={`join-btn ${!community.canJoin ? 'join-btn-disabled' : ''}`}
                         onClick={(event) => {
                           event.stopPropagation();
-                          handleJoin(community._id);
+                          if (community.canJoin) {
+                            handleJoin(community._id);
+                          } else {
+                            alert(community.helpMessage || 'You cannot join this community');
+                          }
                         }}
-                        disabled={isActionPending}
+                        disabled={isActionPending || !community.canJoin}
+                        title={community.canJoin ? 'Join this community' : community.helpMessage}
                       >
-                        {isActionPending ? 'Joining...' : 'Join'}
+                        {isActionPending ? 'Joining...' : 
+                         !community.canJoin ? 'Restricted' : 'Join'}
                       </button>
                     )}
                   </div>
@@ -656,18 +687,24 @@ export default function CommonCommunity() {
               <div className="strip-list">
                 {visibleMembers.map((member) => (
                   <div key={member._id} className="strip-member">
-                    {member.profilePic ? (
-                      <img
-                        src={getProfilePicUrl(member.profilePic)}
-                        alt={member.fullName || 'Community member'}
-                        onError={(event) => handleImageError(event)}
-                      />
-                    ) : (
-                      <span className="strip-member-fallback">
-                        {member.fullName ? member.fullName.charAt(0) : '?'}
-                      </span>
-                    )}
-                    <span className="strip-member-name">{member.fullName || 'Member'}</span>
+                    <div className="strip-member-avatar">
+                      {member.profilePic ? (
+                        <img
+                          src={getProfilePicUrl(member.profilePic)}
+                          alt={member.fullName || 'Community member'}
+                          onError={(event) => handleImageError(event)}
+                        />
+                      ) : (
+                        <span className="strip-member-fallback">
+                          {member.fullName ? member.fullName.charAt(0) : '?'}
+                        </span>
+                      )}
+                      {member.isAdmin && <span className="member-admin-badge">👑</span>}
+                    </div>
+                    <span className="strip-member-name">
+                      {member.fullName || 'Member'}
+                      {member.isAdmin && <span className="admin-indicator"> (Admin)</span>}
+                    </span>
                   </div>
                 ))}
                 {remainingMembers > 0 && (
@@ -726,7 +763,10 @@ export default function CommonCommunity() {
 
                       <div className="message-bubble">
                         {!isOwnMessage && showAvatar && (
-                          <div className="message-sender">{message.sender?.fullName || 'Unknown user'}</div>
+                          <div className="message-sender">
+                            {message.sender?.fullName || 'Unknown user'}
+                            {message.sender?.isAdmin && <span className="sender-admin-badge">👑</span>}
+                          </div>
                         )}
                         <div className="message-content">
                           {message.messageType === 'image' && message.image && (

@@ -408,6 +408,16 @@ const ProfilePage = ({ userProfile, onBackToHome, onLogout, onStartChat, isMobil
               userProfile={displayUser}
               currentUser={currentUser}
               isOwnProfile={isOwnProfile}
+              onFollowUpdate={(isFollowing) => {
+                setIsFollowing(isFollowing);
+                // Update user stats when follow status changes
+                setUserStats(prev => ({
+                  ...prev,
+                  totalFollowers: isFollowing 
+                    ? prev.totalFollowers + 1 
+                    : Math.max(0, prev.totalFollowers - 1)
+                }));
+              }}
             />
           </div>
         </div>

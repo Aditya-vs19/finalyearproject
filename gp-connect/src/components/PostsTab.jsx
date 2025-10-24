@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaImage, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
-import { postsAPI } from '../services/api';
+import { postsAPI, profileAPI } from '../services/api';
+import PrivatePostsLock from './PrivatePostsLock';
 import './PostsTab.css';
 
-const PostsTab = ({ userProfile, isOwnProfile }) => {
+const PostsTab = ({ userProfile, isOwnProfile, currentUser, onFollowUpdate }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -17,16 +18,72 @@ const PostsTab = ({ userProfile, isOwnProfile }) => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [deleteConfirm, setDeleteConfirm] = useState({ show: false, postId: null, postCaption: '' });
   const [deleting, setDeleting] = useState(null);
+  
+  // Privacy control states
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [showLockedState, setShowLockedState] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
 
   useEffect(() => {
-    fetchPosts();
-  }, [userProfile]);
+    if (userProfile && currentUser) {
+      checkFollowStatusAndFetchPosts();
+    }
+  }, [userProfile, currentUser]);
+
+  const checkFollowStatusAndFetchPosts = async () => {
+    try {
+      setLoading(true);
+      setMessage({ type: '', text: '' });
+
+      // Check if userProfile exists
+      if (!userProfile || !userProfile._id) {
+        setMessage({ type: 'error', text: 'User profile not found' });
+        return;
+      }
+
+      // If viewing own profile, always show posts
+      if (isOwnProfile) {
+        setShowLockedState(false);
+        await fetchPosts();
+        return;
+      }
+
+      // If viewing super admin profile, always show posts (they are public)
+      const isSuperAdmin = userProfile.isAdmin === true && userProfile.adminLevel === 'super';
+      if (isSuperAdmin) {
+        setShowLockedState(false);
+        await fetchPosts();
+        return;
+      }
+
+      // Check follow status for regular users
+      if (currentUser && currentUser.following) {
+        const following = currentUser.following.includes(userProfile._id);
+        setIsFollowing(following);
+        
+        if (following) {
+          setShowLockedState(false);
+          await fetchPosts();
+        } else {
+          setShowLockedState(true);
+          setPosts([]);
+        }
+      } else {
+        // If no current user context, try to fetch posts and handle 403
+        await fetchPosts();
+      }
+
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+      setMessage({ type: 'error', text: 'Failed to load profile data' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
-      setLoading(true);
-
       // Check if userProfile exists
       if (!userProfile || !userProfile._id) {
         setMessage({ type: 'error', text: 'User profile not found' });
@@ -36,18 +93,23 @@ const PostsTab = ({ userProfile, isOwnProfile }) => {
       const response = await postsAPI.getUserPosts(userProfile._id);
       const fetchedPosts = response.data || [];
       setPosts(fetchedPosts);
+      setShowLockedState(false);
 
     } catch (error) {
       console.error('Error fetching posts:', error);
-      if (error.response?.status === 404) {
+      
+      // Handle 403 error - user needs to follow to see posts
+      if (error.response?.status === 403) {
+        setShowLockedState(true);
+        setPosts([]);
+        setMessage({ type: '', text: '' }); // Clear any error messages for privacy state
+      } else if (error.response?.status === 404) {
         setMessage({ type: 'error', text: 'User not found' });
       } else if (error.response?.status === 401) {
         setMessage({ type: 'error', text: 'Please log in again' });
       } else {
         setMessage({ type: 'error', text: 'Failed to load posts' });
       }
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -156,6 +218,39 @@ const PostsTab = ({ userProfile, isOwnProfile }) => {
     setEditingPost(null);
     setFormData({ caption: '', image: null });
     setImagePreview(null);
+  };
+
+  const handleFollowClick = async () => {
+    if (!userProfile || !currentUser) return;
+
+    try {
+      setIsFollowLoading(true);
+      setMessage({ type: '', text: '' });
+
+      await profileAPI.followUser(userProfile._id);
+      
+      // Update follow status
+      setIsFollowing(true);
+      
+      // Notify parent component about follow update
+      if (onFollowUpdate) {
+        onFollowUpdate(true);
+      }
+      
+      // Immediately fetch posts after successful follow
+      await fetchPosts();
+      
+      setMessage({ type: 'success', text: `You are now following ${userProfile.fullName}` });
+
+    } catch (error) {
+      console.error('Error following user:', error);
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Failed to follow user'
+      });
+    } finally {
+      setIsFollowLoading(false);
+    }
   };
 
 
@@ -273,77 +368,89 @@ const PostsTab = ({ userProfile, isOwnProfile }) => {
         </div>
       )}
 
-      <div className="posts-list">
-        {posts.length === 0 ? (
-          <div className="no-posts">
-            <p>{isOwnProfile ? "You haven't created any posts yet." : "No posts yet."}</p>
-            {isOwnProfile && (
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowCreateForm(true)}
-              >
-                <FaPlus /> Create Your First Post
-              </button>
-            )}
-          </div>
-        ) : (
-          posts.map(post => (
-            <div key={post._id} className="post-item">
-              <div className="post-header">
-                <div className="post-user-info">
-                  <img
-                    src={post.userId.profilePic || '/default-avatar.svg'}
-                    alt="Profile"
-                    className="post-user-avatar"
-                    onError={(e) => {
-                      e.target.src = '/default-avatar.svg';
-                    }}
-                  />
-                  <div>
-                    <h5>{post.userId.fullName}</h5>
-                    <p className="post-time">{formatDate(post.createdAt)}</p>
-                  </div>
-                </div>
-                <div className="post-actions">
-                  <button
-                    onClick={() => handleEdit(post)}
-                    className="action-btn edit-btn"
-                    title="Edit post"
-                    style={{ display: isOwnProfile ? 'flex' : 'none' }}
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(post)}
-                    className="action-btn delete-btn"
-                    title="Delete post"
-                    disabled={deleting === post._id}
-                    style={{ display: isOwnProfile ? 'flex' : 'none' }}
-                  >
-                    {deleting === post._id ? (
-                      <div className="mini-spinner"></div>
-                    ) : (
-                      "DELETE"
-                    )}
-                  </button>
-                </div>
-              </div>
+      {/* Show locked state for private posts */}
+      {showLockedState && !isOwnProfile && (
+        <PrivatePostsLock
+          targetUser={userProfile}
+          onFollowClick={handleFollowClick}
+          isFollowLoading={isFollowLoading}
+        />
+      )}
 
-              <div className="post-content">
-                <p>{post.caption}</p>
-                {post.image && (
-                  <div className="post-image">
-                    <img
-                      src={`http://localhost:5000${post.image}`}
-                      alt="Post"
-                    />
-                  </div>
-                )}
-              </div>
+      {/* Show posts list when not locked */}
+      {!showLockedState && (
+        <div className="posts-list">
+          {posts.length === 0 ? (
+            <div className="no-posts">
+              <p>{isOwnProfile ? "You haven't created any posts yet." : "No posts yet."}</p>
+              {isOwnProfile && (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setShowCreateForm(true)}
+                >
+                  <FaPlus /> Create Your First Post
+                </button>
+              )}
             </div>
-          ))
-        )}
-      </div>
+          ) : (
+            posts.map(post => (
+              <div key={post._id} className="post-item">
+                <div className="post-header">
+                  <div className="post-user-info">
+                    <img
+                      src={post.userId.profilePic || '/default-avatar.svg'}
+                      alt="Profile"
+                      className="post-user-avatar"
+                      onError={(e) => {
+                        e.target.src = '/default-avatar.svg';
+                      }}
+                    />
+                    <div>
+                      <h5>{post.userId.fullName}</h5>
+                      <p className="post-time">{formatDate(post.createdAt)}</p>
+                    </div>
+                  </div>
+                  <div className="post-actions">
+                    <button
+                      onClick={() => handleEdit(post)}
+                      className="action-btn edit-btn"
+                      title="Edit post"
+                      style={{ display: isOwnProfile ? 'flex' : 'none' }}
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(post)}
+                      className="action-btn delete-btn"
+                      title="Delete post"
+                      disabled={deleting === post._id}
+                      style={{ display: isOwnProfile ? 'flex' : 'none' }}
+                    >
+                      {deleting === post._id ? (
+                        <div className="mini-spinner"></div>
+                      ) : (
+                        "DELETE"
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="post-content">
+                  <p>{post.caption}</p>
+                  {post.image && (
+                    <div className="post-image">
+                      <img
+                        src={`http://localhost:5000${post.image}`}
+                        alt="Post"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm.show && (

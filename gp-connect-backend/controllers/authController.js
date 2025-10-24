@@ -131,7 +131,10 @@ const verifyOtp = asyncHandler(async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      enrollment: user.enrollment,
+      enrollment: user.enrollment || null,
+      department: user.department || null,
+      isAdmin: user.isAdmin || false,
+      adminLevel: user.adminLevel || 'none',
     },
   });
 });
@@ -155,7 +158,10 @@ const authUser = asyncHandler(async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      enrollment: user.enrollment,
+      enrollment: user.enrollment || null, // Handle super admin without enrollment
+      department: user.department || null, // Handle super admin without department
+      isAdmin: user.isAdmin || false,
+      adminLevel: user.adminLevel || 'none',
       token: generateToken(user._id),
     });
   } else {
@@ -247,7 +253,10 @@ const verifyPasswordOtpLogin = asyncHandler(async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      enrollment: user.enrollment,
+      enrollment: user.enrollment || null,
+      department: user.department || null,
+      isAdmin: user.isAdmin || false,
+      adminLevel: user.adminLevel || 'none',
     },
   });
 });

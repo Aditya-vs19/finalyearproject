@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './LoginPage.css';
 import { authAPI } from '../services/api';
-import { FaEye, FaEyeSlash, FaEnvelope } from 'react-icons/fa';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import {
   ADMISSION_YEARS,
   DEPARTMENTS,
@@ -266,21 +266,18 @@ function RegistrationPage({ onRegister, onSwitchToLogin }) {
 
           <div className="auth-field">
             <label className="auth-label" htmlFor="email">Email</label>
-            <div className="email-input-wrapper">
-              <FaEnvelope className="email-input-icon" />
-              <input
-                id="email"
-                className={`auth-input auth-input-with-icon${isFieldInvalid('email') ? ' auth-input-error' : ''}`}
-                type="email"
-                name="email"
-                value={formValues.email}
-                onChange={handleChange('email')}
-                onBlur={handleBlur('email')}
-                aria-invalid={isFieldInvalid('email')}
-                aria-describedby="email-error"
-                autoComplete="email"
-              />
-            </div>
+            <input
+              id="email"
+              className={`auth-input${isFieldInvalid('email') ? ' auth-input-error' : ''}`}
+              type="email"
+              name="email"
+              value={formValues.email}
+              onChange={handleChange('email')}
+              onBlur={handleBlur('email')}
+              aria-invalid={isFieldInvalid('email')}
+              aria-describedby="email-error"
+              autoComplete="email"
+            />
             {renderError('email', 'email-error')}
           </div>
 

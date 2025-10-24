@@ -342,15 +342,21 @@ export default function HomePage({ onLogout }) {
             {searchResults.map(user => (
               <div key={user._id} className="search-result-user-card">
                 <div className="search-user-avatar-section" onClick={() => handleUserClick(user)}>
-                  <img
-                    src={getProfilePicUrl(user.profilePic)}
-                    alt="Profile"
-                    className="search-user-avatar-img"
-                    onError={(e) => handleImageError(e, '/default-avatar.svg')}
-                  />
+                  <div className="search-avatar-container">
+                    <img
+                      src={getProfilePicUrl(user.profilePic)}
+                      alt="Profile"
+                      className="search-user-avatar-img"
+                      onError={(e) => handleImageError(e, '/default-avatar.svg')}
+                    />
+                    {user.isAdmin && <span className="search-admin-badge">👑</span>}
+                  </div>
                 </div>
                 <div className="search-user-details" onClick={() => handleUserClick(user)}>
-                  <div className="search-username">@{user.enrollment}</div>
+                  <div className="search-username">
+                    @{user.enrollment}
+                    {user.isAdmin && <span className="search-admin-indicator"> (Admin)</span>}
+                  </div>
                   <div className="search-fullname">{user.fullName}</div>
                   <div className="search-department">{user.department} Department</div>
                   {user.isFollowing && (
@@ -495,14 +501,20 @@ export default function HomePage({ onLogout }) {
                         onClick={() => handleTopSearchUserClick(user)}
                       >
                         <div className="search-user-avatar">
-                          <img
-                            src={getProfilePicUrl(user.profilePic)}
-                            alt="Profile"
-                            onError={(e) => handleImageError(e, '/default-avatar.svg')}
-                          />
+                          <div className="search-avatar-container">
+                            <img
+                              src={getProfilePicUrl(user.profilePic)}
+                              alt="Profile"
+                              onError={(e) => handleImageError(e, '/default-avatar.svg')}
+                            />
+                            {user.isAdmin && <span className="search-admin-badge">👑</span>}
+                          </div>
                         </div>
                         <div className="search-user-info">
-                          <div className="search-user-name">{user.fullName}</div>
+                          <div className="search-user-name">
+                            {user.fullName}
+                            {user.isAdmin && <span className="search-admin-indicator"> (Admin)</span>}
+                          </div>
                           <div className="search-user-enrollment">@{user.enrollment}</div>
                           <div className="search-user-department">{user.department} Department</div>
                         </div>

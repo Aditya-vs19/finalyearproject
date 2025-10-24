@@ -43,17 +43,23 @@ const createPost = asyncHandler(async (req, res) => {
   const { caption } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : null;
 
+  // Check if user is super admin to make post globally visible
+  const user = await User.findById(req.user._id);
+  const isSuperAdmin = user && user.isAdmin && user.adminLevel === 'super';
+
   const post = new Post({
     userId: req.user._id,
     caption,
     image,
+    isGlobalPost: isSuperAdmin, // Super admin posts are globally visible
+    postType: isSuperAdmin ? 'admin_announcement' : 'regular'
   });
 
   const createdPost = await post.save();
   res.status(201).json(createdPost);
 });
 
-// @desc    Get posts from current user and followed users
+// @desc    Get posts from current user and followed users (including global posts)
 // @route   GET /api/posts
 // @access  Private
 const getPosts = asyncHandler(async (req, res) => {
@@ -63,11 +69,18 @@ const getPosts = asyncHandler(async (req, res) => {
   // Create array of user IDs to fetch posts from (current user + followed users)
   const userIdsToFetch = [req.user._id, ...currentUser.following];
   
-  const posts = await Post.find({ userId: { $in: userIdsToFetch } })
+  // Get posts from followed users AND global posts (super admin posts)
+  const posts = await Post.find({
+    $or: [
+      { userId: { $in: userIdsToFetch } }, // Posts from followed users
+      { isGlobalPost: true } // Global posts (super admin posts visible to everyone)
+    ]
+  })
     .sort({ createdAt: -1 })
-    .populate('userId', 'fullName profilePic enrollment')
+    .populate('userId', 'fullName profilePic enrollment isAdmin adminLevel')
     .populate('likes', 'fullName profilePic')
     .populate('comments.user', 'fullName profilePic');
+  
   res.json(posts);
 });
 
@@ -75,9 +88,57 @@ const getPosts = asyncHandler(async (req, res) => {
 // @route   GET /api/posts/user/:id
 // @access  Private
 const getUserPosts = asyncHandler(async (req, res) => {
-  const posts = await Post.find({ userId: req.params.id })
+  const targetUserId = req.params.id;
+  const currentUserId = req.user._id;
+  
+  // Check if viewing own profile - always allow access
+  if (targetUserId === currentUserId.toString()) {
+    const posts = await Post.find({ userId: targetUserId })
+      .sort({ createdAt: -1 })
+      .populate('userId', 'fullName profilePic enrollment isAdmin adminLevel');
+    return res.json(posts);
+  }
+  
+  // Check if target user is super admin - their posts are always public
+  const targetUser = await User.findById(targetUserId);
+  const isSuperAdmin = targetUser && targetUser.isAdmin && targetUser.adminLevel === 'super';
+  
+  if (isSuperAdmin) {
+    // Super admin posts are always visible to everyone
+    const posts = await Post.find({ userId: targetUserId })
+      .sort({ createdAt: -1 })
+      .populate('userId', 'fullName profilePic enrollment isAdmin adminLevel');
+    return res.json(posts);
+  }
+  
+  // Check follow relationship for regular users' profiles
+  const currentUser = await User.findById(currentUserId);
+  const isFollowing = currentUser.following.includes(targetUserId);
+  
+  if (!isFollowing) {
+    return res.status(403).json({
+      message: 'Follow user to see posts',
+      requiresFollow: true,
+      code: 'FOLLOW_REQUIRED'
+    });
+  }
+  
+  // Return posts if following
+  const posts = await Post.find({ userId: targetUserId })
     .sort({ createdAt: -1 })
-    .populate('userId', 'fullName profilePic enrollment');
+    .populate('userId', 'fullName profilePic enrollment isAdmin adminLevel');
+  res.json(posts);
+});
+
+// @desc    Get global/admin posts only
+// @route   GET /api/posts/global
+// @access  Private
+const getGlobalPosts = asyncHandler(async (req, res) => {
+  const posts = await Post.find({ isGlobalPost: true })
+    .sort({ createdAt: -1 })
+    .populate('userId', 'fullName profilePic enrollment isAdmin adminLevel')
+    .populate('likes', 'fullName profilePic')
+    .populate('comments.user', 'fullName profilePic');
   res.json(posts);
 });
 
@@ -286,4 +347,4 @@ const getPostComments = asyncHandler(async (req, res) => {
   });
 });
 
-export { upload, createPost, getPosts, getUserPosts, updatePost, deletePost, toggleLike, getPostLikes, addComment, getPostComments };
+export { upload, createPost, getPosts, getUserPosts, getGlobalPosts, updatePost, deletePost, toggleLike, getPostLikes, addComment, getPostComments };

@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import Community from '../models/Community.js';
 import User from '../models/User.js';
+import AdminService from '../services/adminService.js';
+import DepartmentService from '../services/departmentService.js';
+import EnhancedErrorHandler from '../utils/errorHandler.js';
 
 const parseAnnouncementAdminIds = () => {
   const fromEnv = process.env.ANNOUNCEMENT_ADMIN_ID || process.env.ANNOUNCEMENT_ADMIN_IDS;
@@ -64,6 +67,8 @@ const shapeMember = (member) => {
       fullName: member.fullName || '',
       profilePic: member.profilePic || '',
       enrollment: member.enrollment || '',
+      isAdmin: !!member.isAdmin,
+      adminLevel: member.adminLevel || 'none'
     };
   }
   return {
@@ -88,12 +93,18 @@ const shapeCreator = (creator) => {
   };
 };
 
-const shapeCommunity = (community, userId, { includeMembers = false } = {}) => {
+const shapeCommunity = async (community, userId, { includeMembers = false } = {}) => {
   const members = community.members || [];
   const membersCount = members.length;
   const memberIds = members
     .map((member) => toStringId(member))
     .filter(Boolean);
+  
+  // Check admin status for enhanced display
+  const user = await User.findById(userId);
+  const isSuperAdmin = user ? await AdminService.isSuperAdmin(userId) : false;
+  const isCommAdmin = community.isUserAdmin ? community.isUserAdmin(userId) : false;
+  
   const shapedCommunity = {
     _id: community._id.toString(),
     name: community.name,
@@ -102,10 +113,16 @@ const shapeCommunity = (community, userId, { includeMembers = false } = {}) => {
     membersCount,
     isMember: communityHasMember(community, userId),
     isAnnouncement: !!community.isAnnouncement,
-    canPost: !community.isAnnouncement || isAnnouncementAdmin(community, userId),
+    canPost: !community.isAnnouncement || isAnnouncementAdmin(community, userId) || isSuperAdmin || isCommAdmin,
     createdAt: community.createdAt,
     updatedAt: community.updatedAt,
     memberIds,
+    // Enhanced admin and department information
+    departmentRestriction: community.departmentRestriction || null,
+    adminOnly: !!community.adminOnly,
+    isUnrestricted: DepartmentService.isUnrestrictedCommunity(community.name),
+    userIsAdmin: isSuperAdmin || isCommAdmin,
+    userIsSuperAdmin: isSuperAdmin
   };
 
   if (community.createdBy) {
@@ -134,6 +151,8 @@ const shapeMessage = (message, communityId) => ({
         fullName: message.sender.fullName || '',
         profilePic: message.sender.profilePic || '',
         enrollment: message.sender.enrollment || '',
+        isAdmin: !!message.sender.isAdmin,
+        adminLevel: message.sender.adminLevel || 'none'
       }
     : null,
   communityId,
@@ -149,21 +168,127 @@ const ensureValidObjectId = (id) => {
 export const listCommunities = async (req, res) => {
   try {
     const userId = req.user.id;
-    const communities = await Community.find({}).sort({ name: 1 });
+    const user = await User.findById(userId);
+    const communities = await Community.find({})
+      .populate('communityAdmins', 'fullName profilePic enrollment')
+      .sort({ name: 1 });
 
-    const shapedCommunities = communities.map((community) => ({
-      _id: community._id.toString(),
-      name: community.name,
-      description: community.description,
-      avatar: community.avatar,
-      membersCount: community.members?.length || 0,
-      isMember: communityHasMember(community, userId),
-      isAnnouncement: !!community.isAnnouncement,
-    }));
+    const shapedCommunities = await Promise.all(
+      communities.map(async (community) => {
+        // Check if user can join this community
+        const canJoinResult = user ? await community.canUserJoin(user) : { canJoin: false, reason: 'no_user' };
+        
+        // Check admin status
+        const isSuperAdmin = user ? await AdminService.isSuperAdmin(userId) : false;
+        const isCommAdmin = community.isUserAdmin ? community.isUserAdmin(userId) : false;
+        
+        // Enhanced community information with detailed admin and department data
+        const communityData = {
+          _id: community._id.toString(),
+          name: community.name,
+          description: community.description,
+          avatar: community.avatar,
+          membersCount: community.members?.length || 0,
+          isMember: communityHasMember(community, userId),
+          isAnnouncement: !!community.isAnnouncement,
+          
+          // Enhanced department restriction information
+          departmentRestriction: community.departmentRestriction || null,
+          adminOnly: !!community.adminOnly,
+          isUnrestricted: DepartmentService.isUnrestrictedCommunity(community.name),
+          
+          // Join permission details
+          canJoin: canJoinResult.canJoin,
+          joinRestrictionReason: canJoinResult.reason || null,
+          joinRestrictionMessage: canJoinResult.message || null,
+          
+          // User admin status
+          userIsAdmin: isSuperAdmin || isCommAdmin,
+          userIsSuperAdmin: isSuperAdmin,
+          userIsCommunityAdmin: isCommAdmin,
+          
+          // Community admin information
+          communityAdmins: community.communityAdmins?.map(admin => ({
+            _id: admin._id.toString(),
+            fullName: admin.fullName,
+            profilePic: admin.profilePic
+          })) || [],
+          hasAdmins: (community.communityAdmins?.length || 0) > 0,
+          
+          // Enhanced department matching information
+          departmentInfo: {
+            userDepartment: user?.department || null,
+            requiredDepartment: community.departmentRestriction,
+            departmentMatch: user && community.departmentRestriction ? 
+              DepartmentService.departmentsMatch(user.department, community.departmentRestriction) : null,
+            allowedVariations: community.departmentRestriction ? 
+              DepartmentService.getDepartmentVariations(community.departmentRestriction) : null
+          },
+          
+          // Access control summary
+          accessSummary: {
+            type: community.isAnnouncement ? 'announcement' : 
+                  community.adminOnly ? 'admin_only' : 
+                  community.departmentRestriction ? 'department_restricted' : 'open',
+            canPost: user ? (await community.canUserPost(user)).canPost : false,
+            restrictions: []
+          }
+        };
+
+        // Build restrictions array for UI display
+        if (community.departmentRestriction && !DepartmentService.isUnrestrictedCommunity(community.name)) {
+          communityData.accessSummary.restrictions.push({
+            type: 'department',
+            description: `Restricted to ${community.departmentRestriction} department`,
+            userMeetsRequirement: communityData.departmentInfo.departmentMatch
+          });
+        }
+
+        if (community.adminOnly) {
+          communityData.accessSummary.restrictions.push({
+            type: 'admin_only',
+            description: 'Administrator access only',
+            userMeetsRequirement: isSuperAdmin || isCommAdmin
+          });
+        }
+
+        if (community.isAnnouncement) {
+          communityData.accessSummary.restrictions.push({
+            type: 'admin_post_only',
+            description: 'Only administrators can post',
+            userMeetsRequirement: isSuperAdmin || isCommAdmin
+          });
+        }
+
+        // Add helpful messages for restricted access
+        if (!canJoinResult.canJoin && canJoinResult.reason) {
+          switch (canJoinResult.reason) {
+            case 'department_mismatch':
+              communityData.helpMessage = `This community is for ${community.departmentRestriction} department members. Your department: ${user?.department || 'Not specified'}`;
+              break;
+            case 'admin_only':
+              communityData.helpMessage = 'This community is restricted to administrators only.';
+              break;
+            case 'no_department':
+              communityData.helpMessage = 'Please specify your department in your profile to join department-restricted communities.';
+              break;
+            default:
+              communityData.helpMessage = canJoinResult.message || 'Access restricted';
+          }
+        }
+
+        return communityData;
+      })
+    );
 
     res.json(shapedCommunities);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error listing communities:', error);
+    const errorResponse = EnhancedErrorHandler.createServerError('list communities', error, {
+      operation: 'listCommunities',
+      userId: req.user?.id
+    });
+    res.status(500).json(errorResponse);
   }
 };
 
@@ -172,21 +297,38 @@ export const getCommunity = async (req, res) => {
     const { communityId } = req.params;
 
     if (!ensureValidObjectId(communityId)) {
-      return res.status(400).json({ message: 'Invalid community id' });
+      const errorResponse = EnhancedErrorHandler.createValidationError(
+        'community ID', 
+        communityId, 
+        'Must be a valid MongoDB ObjectId',
+        { operation: 'getCommunity' }
+      );
+      return res.status(400).json(errorResponse);
     }
 
     const community = await Community.findById(communityId)
-      .populate('members', 'fullName profilePic enrollment')
-      .populate('createdBy', 'fullName profilePic enrollment');
+      .populate('members', 'fullName profilePic enrollment isAdmin adminLevel')
+      .populate('createdBy', 'fullName profilePic enrollment')
+      .populate('communityAdmins', 'fullName profilePic enrollment');
 
     if (!community) {
-      return res.status(404).json({ message: 'Community not found' });
+      const errorResponse = EnhancedErrorHandler.createCommunityNotFoundError(communityId, {
+        operation: 'getCommunity',
+        userId: req.user?.id
+      });
+      return res.status(404).json(errorResponse);
     }
 
-    const shapedCommunity = shapeCommunity(community, req.user.id, { includeMembers: true });
+    const shapedCommunity = await shapeCommunity(community, req.user.id, { includeMembers: true });
     res.json(shapedCommunity);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error getting community:', error);
+    const errorResponse = EnhancedErrorHandler.createServerError('get community', error, {
+      operation: 'getCommunity',
+      communityId: req.params.communityId,
+      userId: req.user?.id
+    });
+    res.status(500).json(errorResponse);
   }
 };
 
@@ -195,27 +337,33 @@ export const joinCommunity = async (req, res) => {
     const { communityId } = req.params;
     const userId = req.user.id;
 
-    if (!ensureValidObjectId(communityId)) {
-      return res.status(400).json({ message: 'Invalid community id' });
+    // Use middleware validation results if available
+    const communityAccess = req.communityAccess;
+    
+    if (!communityAccess || !communityAccess.canJoin) {
+      // This should not happen if middleware is working correctly, but provide enhanced error
+      const errorResponse = EnhancedErrorHandler.createServerError('join community', new Error('Middleware validation failed'), {
+        operation: 'joinCommunity',
+        communityId,
+        userId,
+        middlewareError: true
+      });
+      return res.status(403).json(errorResponse);
     }
 
-    const community = await Community.findById(communityId);
-    if (!community) {
-      return res.status(404).json({ message: 'Community not found' });
-    }
+    const community = communityAccess.community;
+    const user = communityAccess.user;
 
-    if (communityHasMember(community, userId)) {
-      return res.status(400).json({ message: 'User is already a member' });
-    }
-
+    // Add user to community
     community.members.push(req.user._id);
     await community.save();
 
     const populatedCommunity = await Community.findById(communityId)
-      .populate('members', 'fullName profilePic enrollment')
-      .populate('createdBy', 'fullName profilePic enrollment');
+      .populate('members', 'fullName profilePic enrollment isAdmin adminLevel')
+      .populate('createdBy', 'fullName profilePic enrollment')
+      .populate('communityAdmins', 'fullName profilePic enrollment');
 
-    const shapedCommunity = shapeCommunity(populatedCommunity, userId, { includeMembers: true });
+    const shapedCommunity = await shapeCommunity(populatedCommunity, userId, { includeMembers: true });
     const memberIds = (populatedCommunity.members || []).map((member) => toStringId(member)).filter(Boolean);
 
     const io = req.app.get('io');
@@ -237,9 +385,17 @@ export const joinCommunity = async (req, res) => {
       success: true,
       message: 'Successfully joined the community',
       community: shapedCommunity,
+      joinReason: communityAccess.reason || 'allowed',
+      accessType: communityAccess.reason
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error joining community:', error);
+    const errorResponse = EnhancedErrorHandler.createServerError('join community', error, {
+      operation: 'joinCommunity',
+      communityId: req.params.communityId,
+      userId: req.user?.id
+    });
+    res.status(500).json(errorResponse);
   }
 };
 
@@ -249,26 +405,48 @@ export const leaveCommunity = async (req, res) => {
     const userId = req.user.id;
 
     if (!ensureValidObjectId(communityId)) {
-      return res.status(400).json({ message: 'Invalid community id' });
+      const errorResponse = EnhancedErrorHandler.createValidationError(
+        'community ID', 
+        communityId, 
+        'Must be a valid MongoDB ObjectId',
+        { operation: 'leaveCommunity' }
+      );
+      return res.status(400).json(errorResponse);
     }
 
     const community = await Community.findById(communityId);
     if (!community) {
-      return res.status(404).json({ message: 'Community not found' });
+      const errorResponse = EnhancedErrorHandler.createCommunityNotFoundError(communityId, {
+        operation: 'leaveCommunity',
+        userId
+      });
+      return res.status(404).json(errorResponse);
     }
 
     if (!communityHasMember(community, userId)) {
-      return res.status(400).json({ message: 'User is not a member' });
+      const errorResponse = EnhancedErrorHandler.createValidationError(
+        'membership status',
+        'not a member',
+        'You must be a member of the community to leave it',
+        { 
+          operation: 'leaveCommunity',
+          communityId,
+          communityName: community.name,
+          userId
+        }
+      );
+      return res.status(400).json(errorResponse);
     }
 
     community.members = community.members.filter((memberId) => toStringId(memberId) !== userId.toString());
     await community.save();
 
     const populatedCommunity = await Community.findById(communityId)
-      .populate('members', 'fullName profilePic enrollment')
-      .populate('createdBy', 'fullName profilePic enrollment');
+      .populate('members', 'fullName profilePic enrollment isAdmin adminLevel')
+      .populate('createdBy', 'fullName profilePic enrollment')
+      .populate('communityAdmins', 'fullName profilePic enrollment');
 
-    const shapedCommunity = shapeCommunity(populatedCommunity, userId, { includeMembers: true });
+    const shapedCommunity = await shapeCommunity(populatedCommunity, userId, { includeMembers: true });
     const memberIds = (populatedCommunity.members || []).map((member) => toStringId(member)).filter(Boolean);
 
     const io = req.app.get('io');
@@ -292,7 +470,13 @@ export const leaveCommunity = async (req, res) => {
       community: shapedCommunity,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error leaving community:', error);
+    const errorResponse = EnhancedErrorHandler.createServerError('leave community', error, {
+      operation: 'leaveCommunity',
+      communityId: req.params.communityId,
+      userId: req.user?.id
+    });
+    res.status(500).json(errorResponse);
   }
 };
 
@@ -302,18 +486,40 @@ export const getCommunityMessages = async (req, res) => {
     const userId = req.user.id;
 
     if (!ensureValidObjectId(communityId)) {
-      return res.status(400).json({ message: 'Invalid community id' });
+      const errorResponse = EnhancedErrorHandler.createValidationError(
+        'community ID', 
+        communityId, 
+        'Must be a valid MongoDB ObjectId',
+        { operation: 'getCommunityMessages' }
+      );
+      return res.status(400).json(errorResponse);
     }
 
     const community = await Community.findById(communityId)
-      .populate('messages.sender', 'fullName profilePic enrollment');
+      .populate('messages.sender', 'fullName profilePic enrollment isAdmin adminLevel');
 
     if (!community) {
-      return res.status(404).json({ message: 'Community not found' });
+      const errorResponse = EnhancedErrorHandler.createCommunityNotFoundError(communityId, {
+        operation: 'getCommunityMessages',
+        userId
+      });
+      return res.status(404).json(errorResponse);
     }
 
     if (!communityHasMember(community, userId)) {
-      return res.status(403).json({ message: 'You must be a member to view messages' });
+      const errorResponse = EnhancedErrorHandler.createValidationError(
+        'membership status',
+        'not a member',
+        'You must be a member of the community to view messages',
+        { 
+          operation: 'getCommunityMessages',
+          communityId,
+          communityName: community.name,
+          userId,
+          suggestion: 'Join the community first to view messages'
+        }
+      );
+      return res.status(403).json(errorResponse);
     }
 
     const sortedMessages = [...(community.messages || [])].sort(
@@ -326,7 +532,13 @@ export const getCommunityMessages = async (req, res) => {
 
     res.json(shapedMessages);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error getting community messages:', error);
+    const errorResponse = EnhancedErrorHandler.createServerError('get community messages', error, {
+      operation: 'getCommunityMessages',
+      communityId: req.params.communityId,
+      userId: req.user?.id
+    });
+    res.status(500).json(errorResponse);
   }
 };
 
@@ -335,30 +547,42 @@ export const sendMessage = async (req, res) => {
     const { communityId } = req.params;
     const userId = req.user.id;
 
-    if (!ensureValidObjectId(communityId)) {
-      return res.status(400).json({ message: 'Invalid community id' });
-    }
-
     // Check if it's an image upload or text message
     const isImageUpload = req.file;
     const content = req.body?.content || '';
     
     if (!isImageUpload && (!content || content.trim().length === 0)) {
-      return res.status(400).json({ message: 'Message content or image is required' });
+      const errorResponse = EnhancedErrorHandler.createValidationError(
+        'message content',
+        content,
+        'Message content or image is required',
+        { 
+          operation: 'sendMessage',
+          communityId,
+          userId,
+          messageType: isImageUpload ? 'image' : 'text'
+        }
+      );
+      return res.status(400).json(errorResponse);
     }
 
-    const community = await Community.findById(communityId);
-    if (!community) {
-      return res.status(404).json({ message: 'Community not found' });
+    // Use middleware validation results if available
+    const postAccess = req.postAccess;
+    
+    if (!postAccess || !postAccess.canPost) {
+      // This should not happen if middleware is working correctly, but provide enhanced error
+      const errorResponse = EnhancedErrorHandler.createServerError('send message', new Error('Middleware validation failed'), {
+        operation: 'sendMessage',
+        communityId,
+        userId,
+        middlewareError: true,
+        postAccessDetails: postAccess
+      });
+      return res.status(403).json(errorResponse);
     }
 
-    if (!communityHasMember(community, userId)) {
-      return res.status(403).json({ message: 'You must be a member to send messages' });
-    }
-
-    if (community.isAnnouncement && !isAnnouncementAdmin(community, userId)) {
-      return res.status(403).json({ message: 'Only admin can post announcements.' });
-    }
+    const community = postAccess.community;
+    const user = postAccess.user;
 
     const newMessage = {
       sender: req.user._id,
@@ -378,7 +602,7 @@ export const sendMessage = async (req, res) => {
     await community.save();
 
     const savedMessage = community.messages[community.messages.length - 1];
-    const sender = await User.findById(userId).select('fullName profilePic enrollment');
+    const sender = await User.findById(userId).select('fullName profilePic enrollment isAdmin adminLevel');
 
     const shapedMessage = {
       _id: savedMessage._id.toString(),
@@ -393,8 +617,20 @@ export const sendMessage = async (req, res) => {
             fullName: sender.fullName || '',
             profilePic: sender.profilePic || '',
             enrollment: sender.enrollment || '',
+            isAdmin: !!sender.isAdmin,
+            adminLevel: sender.adminLevel || 'none'
           }
         : null,
+      // Add enhanced context about posting permissions and admin status
+      postReason: postAccess.reason || 'member',
+      isAdminPost: postAccess.reason === 'super_admin' || postAccess.reason === 'community_admin',
+      adminContext: {
+        postedByAdmin: postAccess.reason === 'super_admin' || postAccess.reason === 'community_admin',
+        adminLevel: sender?.adminLevel || 'none',
+        communityAdminOnly: !!community.adminOnly,
+        isAnnouncementCommunity: !!community.isAnnouncement,
+        accessReason: postAccess.reason
+      }
     };
 
     const io = req.app.get('io');
@@ -408,6 +644,12 @@ export const sendMessage = async (req, res) => {
     res.status(201).json(shapedMessage);
   } catch (error) {
     console.error('Error sending message:', error);
-    res.status(500).json({ message: error.message });
+    const errorResponse = EnhancedErrorHandler.createServerError('send message', error, {
+      operation: 'sendMessage',
+      communityId: req.params.communityId,
+      userId: req.user?.id,
+      messageType: req.file ? 'image' : 'text'
+    });
+    res.status(500).json(errorResponse);
   }
 };

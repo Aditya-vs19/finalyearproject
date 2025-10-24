@@ -348,10 +348,15 @@ body {
   align-items: center;
 }
 
+.password-input-wrapper .auth-input {
+  padding-top: 1.1rem;
+  padding-bottom: 0.7rem;
+}
+
 .password-toggle-btn {
   position: absolute;
   right: 1rem;
-  top: 50%;
+  top: 47%;
   transform: translateY(-50%);
   background: none;
   border: none;
@@ -371,28 +376,7 @@ body {
   background: rgba(92, 141, 197, 0.1);
 }
 
-.email-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
 
-.email-input-icon {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #94a3b8;
-  font-size: 1rem;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.auth-input-with-icon {
-  padding-left: 3rem;
-}
 
 .auth-input-error {
   border: 1px solid #ef4444 !important;
@@ -564,6 +548,11 @@ body {
 
 /* Mobile responsive styles */
 @media (max-width: 700px) {
+  /* Hide gradient blobs on mobile for cleaner look */
+  .gradient-blob {
+    display: none;
+  }
+  
   .auth-container {
     padding: 1rem;
     min-height: 100vh;

@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import { protect } from '../middleware/authMiddleware.js';
+import CommunityAccessMiddleware from '../middleware/communityAccessMiddleware.js';
 import {
   listCommunities,
   getCommunity,
@@ -49,8 +50,8 @@ router.get('/', listCommunities);
 // Get community details
 router.get('/:communityId', getCommunity);
 
-// Join community
-router.post('/:communityId/join', joinCommunity);
+// Join community (with department validation middleware)
+router.post('/:communityId/join', CommunityAccessMiddleware.validateCommunityJoin, joinCommunity);
 
 // Leave community
 router.post('/:communityId/leave', leaveCommunity);
@@ -58,7 +59,7 @@ router.post('/:communityId/leave', leaveCommunity);
 // Get community messages
 router.get('/:communityId/messages', getCommunityMessages);
 
-// Send message to community (text or image)
+// Send message to community (text or image) with admin-only posting validation
 router.post('/:communityId/messages', (req, res, next) => {
   upload.single('image')(req, res, (err) => {
     if (err) {
@@ -72,6 +73,6 @@ router.post('/:communityId/messages', (req, res, next) => {
     }
     next();
   });
-}, sendMessage);
+}, CommunityAccessMiddleware.validateCommunityPost, sendMessage);
 
 export default router;

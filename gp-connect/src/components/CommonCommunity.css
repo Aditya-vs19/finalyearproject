@@ -187,8 +187,24 @@
   line-height: 1.3;
 }
 
+/* Community Title and Badges */
+.community-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.community-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
 .official-badge {
-  align-self: flex-start;
   background: var(--settings-inner-card-bg);
   color: var(--accent-color);
   border: 1px solid var(--settings-card-border);
@@ -200,12 +216,95 @@
   text-transform: uppercase;
 }
 
+.admin-only-badge {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.user-admin-badge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
 .community-card-info p {
   color: var(--text-secondary);
   font-size: 0.95rem;
   line-height: 1.6;
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+/* Department Restrictions */
+.department-restriction {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--settings-inner-card-bg);
+  border: 1px solid var(--settings-card-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.restriction-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.restriction-text {
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.restriction-status {
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.restriction-status.not-eligible {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Help Messages */
+.help-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #f59e0b;
+  line-height: 1.4;
+}
+
+.help-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
 }
 
 .community-card-footer {
@@ -319,6 +418,20 @@
 .join-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.join-btn-disabled {
+  background: var(--settings-inner-card-bg) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border-secondary) !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+.join-btn-disabled:hover {
+  background: var(--settings-inner-card-bg) !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* Chat Interface */
@@ -473,6 +586,13 @@
   min-width: 74px;
 }
 
+.strip-member-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .strip-member img,
 .strip-member-fallback {
   width: 44px;
@@ -487,11 +607,33 @@
   object-fit: cover;
 }
 
+.member-admin-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
 .strip-member-name {
   font-size: 0.8rem;
   color: var(--text-secondary);
   text-align: center;
   max-width: 72px;
+}
+
+.admin-indicator {
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 0.75rem;
 }
 
 .more-members {
@@ -608,6 +750,21 @@
   font-size: 0.8rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.sender-admin-badge {
+  font-size: 0.7rem;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .message-content {
@@ -830,6 +987,24 @@
     padding: 1.5rem;
   }
 
+  .community-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .community-badges {
+    flex-direction: row;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .department-restriction,
+  .help-message {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+
   .chat-actions {
     flex-direction: column;
     align-items: flex-end;
@@ -839,6 +1014,27 @@
   .back-btn,
   .leave-btn {
     width: 100%;
+  }
+
+  .strip-member {
+    min-width: 60px;
+  }
+
+  .strip-member img,
+  .strip-member-fallback {
+    width: 36px;
+    height: 36px;
+  }
+
+  .member-admin-badge {
+    width: 14px;
+    height: 14px;
+    font-size: 8px;
+  }
+
+  .strip-member-name {
+    font-size: 0.75rem;
+    max-width: 60px;
   }
 }
 

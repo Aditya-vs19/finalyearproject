@@ -330,12 +330,16 @@ const followUser = asyncHandler(async (req, res) => {
     throw new Error('Already following this user');
   }
 
-  // Add to following and followers
-  currentUser.following.push(targetUserId);
-  targetUser.followers.push(req.user._id);
-
-  await currentUser.save();
-  await targetUser.save();
+  // Use updateOne to bypass validation issues with admin accounts
+  await User.updateOne(
+    { _id: req.user._id },
+    { $addToSet: { following: targetUserId } }
+  );
+  
+  await User.updateOne(
+    { _id: targetUserId },
+    { $addToSet: { followers: req.user._id } }
+  );
 
   // Create notification for the followed user
   await createNotification(
@@ -372,16 +376,16 @@ const unfollowUser = asyncHandler(async (req, res) => {
     throw new Error('Not following this user');
   }
 
-  // Remove from following and followers
-  currentUser.following = currentUser.following.filter(
-    id => id.toString() !== targetUserId
+  // Use updateOne to bypass validation issues with admin accounts
+  await User.updateOne(
+    { _id: req.user._id },
+    { $pull: { following: targetUserId } }
   );
-  targetUser.followers = targetUser.followers.filter(
-    id => id.toString() !== req.user._id.toString()
+  
+  await User.updateOne(
+    { _id: targetUserId },
+    { $pull: { followers: req.user._id } }
   );
-
-  await currentUser.save();
-  await targetUser.save();
 
   res.json({
     message: 'Successfully unfollowed user',

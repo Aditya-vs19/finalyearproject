@@ -324,6 +324,10 @@ export default function Feed({ onNavigateToProfile }) {
           return null;
         }
         
+        // Check if this is a global admin post
+        const isGlobalPost = post.isGlobalPost || post.postType === 'admin_announcement';
+        const isAdminUser = user.isAdmin && user.adminLevel === 'super';
+        
         return (
           <div key={post._id} className="post-card">
             <div className="post-header">
@@ -340,13 +344,15 @@ export default function Feed({ onNavigateToProfile }) {
                   {user && user.fullName ? user.fullName[0].toUpperCase() : 'U'}
                 </span>
               </div>
-              <span 
-                className="username clickable-username" 
-                onClick={() => handleUsernameClick(user._id)}
-                title={`Click to view ${user.fullName || 'User'}'s profile`}
-              >
-                {user.fullName || 'Unknown User'}
-              </span>
+              <div className="user-info">
+                <span 
+                  className="username clickable-username"
+                  onClick={() => handleUsernameClick(user._id)}
+                  title={`Click to view ${user.fullName || 'User'}'s profile`}
+                >
+                  {user.fullName || 'Unknown User'}
+                </span>
+              </div>
             </div>
             {post.image && (
               <img 

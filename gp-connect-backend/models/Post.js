@@ -40,6 +40,17 @@ const postSchema = mongoose.Schema(
     commentsCount: {
       type: Number,
       default: 0
+    },
+    isGlobalPost: {
+      type: Boolean,
+      default: false,
+      index: true // Index for efficient querying
+    },
+    postType: {
+      type: String,
+      enum: ['regular', 'admin_announcement', 'global'],
+      default: 'regular',
+      index: true
     }
   },
   {

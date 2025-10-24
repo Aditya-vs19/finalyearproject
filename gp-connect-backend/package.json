@@ -6,6 +6,9 @@
     "dev": "nodemon server.js",
     "seed": "node seedCommunities.js",
     "cleanup": "node scripts/cleanupDeletedUsers.js",
+    "migrate-admin": "node scripts/migrateAdminAccount.js",
+    "migrate-admin-dry": "node scripts/migrateAdminAccount.js --dry-run",
+    "optimize-performance": "node scripts/initializePerformanceOptimizations.js",
     "test": "vitest run"
   },
   "name": "gp-connect-backend",
@@ -16,6 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "@socket.io/redis-adapter": "^8.3.0",
+    "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
@@ -29,6 +33,7 @@
     "libsodium-wrappers": "^0.7.15",
     "mongoose": "^8.18.2",
     "multer": "^2.0.2",
+    "node-cache": "^5.1.2",
     "node-rsa": "^1.1.1",
     "nodemailer": "^7.0.6",
     "nodemon": "^3.1.10",
