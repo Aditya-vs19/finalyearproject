@@ -61,6 +61,12 @@ const getDefaultCommunities = () => ([
     description: 'Materials science, metal processing, and industrial metallurgy discussions.',
     avatar: '🔧',
   },
+  {
+    key: 'alumni',
+    name: 'Alumni',
+    description: 'Connect with graduates, share experiences, and build professional networks with alumni from all departments.',
+    avatar: '🎓',
+  },
 ]);
 
 const toObjectId = (value) => {
