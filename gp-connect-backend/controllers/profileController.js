@@ -3,39 +3,6 @@ import User from '../models/User.js';
 import Post from '../models/Post.js';
 import { createNotification } from './notificationController.js';
 import bcrypt from 'bcryptjs';
-import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Multer storage configuration for profile pictures
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, path.join(__dirname, '../uploads'));
-  },
-  filename(req, file, cb) {
-    cb(
-      null,
-      `profile-${Date.now()}${path.extname(file.originalname)}`
-    );
-  },
-});
-
-const upload = multer({ 
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'), false);
-    }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-});
 
 // @desc    Get user profile by ID
 // @route   GET /api/profile/:id
@@ -395,7 +362,6 @@ const unfollowUser = asyncHandler(async (req, res) => {
 });
 
 export { 
-  upload, 
   getUserProfile, 
   updateUserProfile, 
   uploadProfilePicture, 

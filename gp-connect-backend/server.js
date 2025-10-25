@@ -15,8 +15,10 @@ import communityRoutes from './routes/communityRoutes.js';
 import conversationRoutes from './routes/conversationRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import imageMonitoringRoutes from './routes/imageMonitoring.js';
 import initializeCommunities from './utils/initializeCommunities.js';
 import { configureChatSocket } from './socket/chatSocket.js';
+import cloudinaryService from './services/cloudinaryService.js';
 
 // Load environment variables
 dotenv.config();
@@ -71,6 +73,7 @@ app.use('/api/community', communityRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/image-monitoring', imageMonitoringRoutes);
 
 
 // Socket.IO connection handling with JWT authentication
@@ -147,6 +150,16 @@ const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   await connectDB();
+  
+  // Initialize Cloudinary service
+  try {
+    cloudinaryService.configure();
+    console.log('Cloudinary service initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Cloudinary service:', error.message);
+    // Don't exit - the app can still run without Cloudinary
+  }
+  
   await initializeCommunities();
 
   server.listen(PORT, () => {
@@ -158,3 +171,6 @@ startServer().catch((error) => {
   console.error('Failed to start server:', error);
   process.exit(1);
 });
+
+// Export app for testing
+export default app;

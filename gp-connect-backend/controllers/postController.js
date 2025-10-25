@@ -2,61 +2,49 @@ import asyncHandler from 'express-async-handler';
 import Post from '../models/Post.js';
 import User from '../models/User.js';
 import { createNotification } from './notificationController.js';
-import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    cb(null, path.join(__dirname, '../uploads'));
-  },
-  filename(req, file, cb) {
-    cb(
-      null,
-      `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
-    );
-  },
-});
-
-const upload = multer({ 
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'), false);
-    }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-});
+import cloudinaryService from '../services/cloudinaryService.js';
 
 // @desc    Create a new post
 // @route   POST /api/posts
 // @access  Private
 const createPost = asyncHandler(async (req, res) => {
-  const { caption } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
+  try {
+    const { caption } = req.body;
+    
+    // Handle Cloudinary image URL - req.file.path contains the Cloudinary URL
+    let image = null;
+    if (req.file) {
+      image = req.file.path; // Cloudinary URL from multer-storage-cloudinary
+    }
 
-  // Check if user is super admin to make post globally visible
-  const user = await User.findById(req.user._id);
-  const isSuperAdmin = user && user.isAdmin && user.adminLevel === 'super';
+    // Check if user is super admin to make post globally visible
+    const user = await User.findById(req.user._id);
+    const isSuperAdmin = user && user.isAdmin && user.adminLevel === 'super';
 
-  const post = new Post({
-    userId: req.user._id,
-    caption,
-    image,
-    isGlobalPost: isSuperAdmin, // Super admin posts are globally visible
-    postType: isSuperAdmin ? 'admin_announcement' : 'regular'
-  });
+    const post = new Post({
+      userId: req.user._id,
+      caption,
+      image,
+      isGlobalPost: isSuperAdmin, // Super admin posts are globally visible
+      postType: isSuperAdmin ? 'admin_announcement' : 'regular'
+    });
 
-  const createdPost = await post.save();
-  res.status(201).json(createdPost);
+    const createdPost = await post.save();
+    
+    // Maintain existing API response format for backward compatibility
+    res.status(201).json(createdPost);
+  } catch (error) {
+    console.error('Error creating post:', error);
+    
+    // Handle cloud upload failures gracefully
+    if (error.message && error.message.includes('Cloudinary')) {
+      res.status(500);
+      throw new Error('Image upload failed. Please try again.');
+    }
+    
+    // Re-throw other errors to be handled by error middleware
+    throw error;
+  }
 });
 
 // @desc    Get posts from current user and followed users (including global posts)
@@ -146,30 +134,80 @@ const getGlobalPosts = asyncHandler(async (req, res) => {
 // @route   PUT /api/posts/:id
 // @access  Private
 const updatePost = asyncHandler(async (req, res) => {
-  const { caption } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+  try {
+    const { caption } = req.body;
+    let newImage = undefined;
+    
+    // Handle Cloudinary image URL if new image is uploaded
+    if (req.file) {
+      newImage = req.file.path; // Cloudinary URL from multer-storage-cloudinary
+    }
 
-  const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.id);
 
-  if (!post) {
-    res.status(404);
-    throw new Error('Post not found');
+    if (!post) {
+      res.status(404);
+      throw new Error('Post not found');
+    }
+
+    if (post.userId.toString() !== req.user._id.toString()) {
+      res.status(401);
+      throw new Error('Not authorized to update this post');
+    }
+
+    // Store old image info for cleanup
+    const oldImageUrl = post.image;
+    let oldImagePublicId = null;
+    
+    // Extract public ID from old Cloudinary URL for cleanup
+    if (oldImageUrl && oldImageUrl.includes('cloudinary.com')) {
+      try {
+        // Extract public ID from Cloudinary URL
+        // URL format: https://res.cloudinary.com/cloud-name/image/upload/v123456/folder/public-id.ext
+        const urlParts = oldImageUrl.split('/');
+        const fileWithExt = urlParts[urlParts.length - 1];
+        const publicIdWithFolder = urlParts.slice(-2).join('/');
+        oldImagePublicId = publicIdWithFolder.split('.')[0]; // Remove file extension
+      } catch (error) {
+        console.warn('Could not extract public ID from old image URL:', oldImageUrl);
+      }
+    }
+
+    // Update fields
+    if (caption !== undefined) post.caption = caption;
+    if (newImage !== undefined) {
+      post.image = newImage;
+      
+      // Cleanup old image from Cloudinary if it exists and we have a new image
+      if (oldImagePublicId && cloudinaryService.isReady()) {
+        try {
+          await cloudinaryService.deleteImage(oldImagePublicId);
+          console.log('Successfully deleted old image from Cloudinary:', oldImagePublicId);
+        } catch (error) {
+          // Log error but don't fail the update - cleanup is not critical
+          console.warn('Failed to delete old image from Cloudinary:', error.message);
+        }
+      }
+    }
+
+    const updatedPost = await post.save();
+    const populatedPost = await Post.findById(updatedPost._id)
+      .populate('userId', 'fullName profilePic enrollment');
+
+    // Maintain existing API contract for frontend compatibility
+    res.json(populatedPost);
+  } catch (error) {
+    console.error('Error updating post:', error);
+    
+    // Handle cloud upload failures gracefully
+    if (error.message && error.message.includes('Cloudinary')) {
+      res.status(500);
+      throw new Error('Image upload failed. Please try again.');
+    }
+    
+    // Re-throw other errors to be handled by error middleware
+    throw error;
   }
-
-  if (post.userId.toString() !== req.user._id.toString()) {
-    res.status(401);
-    throw new Error('Not authorized to update this post');
-  }
-
-  // Update fields
-  if (caption !== undefined) post.caption = caption;
-  if (image !== undefined) post.image = image;
-
-  const updatedPost = await post.save();
-  const populatedPost = await Post.findById(updatedPost._id)
-    .populate('userId', 'fullName profilePic enrollment');
-
-  res.json(populatedPost);
 });
 
 // @desc    Delete a post
@@ -347,4 +385,4 @@ const getPostComments = asyncHandler(async (req, res) => {
   });
 });
 
-export { upload, createPost, getPosts, getUserPosts, getGlobalPosts, updatePost, deletePost, toggleLike, getPostLikes, addComment, getPostComments };
+export { createPost, getPosts, getUserPosts, getGlobalPosts, updatePost, deletePost, toggleLike, getPostLikes, addComment, getPostComments };

@@ -1,5 +1,6 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
+import { uploadSingle } from '../middleware/cloudinaryUpload.js';
 import {
   getUserProfile,
   updateUserProfile,
@@ -11,7 +12,6 @@ import {
   unfollowUser,
   searchUsers,
   testUsers,
-  upload,
 } from '../controllers/profileController.js';
 
 const router = express.Router();
@@ -33,7 +33,7 @@ router.get('/:id', protect, getUserProfile);
 router.put('/:id', protect, updateUserProfile);
 
 // Upload profile picture
-router.post('/:id/upload', protect, upload.single('profilePic'), uploadProfilePicture);
+router.post('/:id/upload', protect, uploadSingle('profilePic'), uploadProfilePicture);
 
 // Change password
 router.put('/:id/password', protect, changePassword);
