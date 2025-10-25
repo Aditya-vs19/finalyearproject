@@ -33,8 +33,9 @@ function App() {
         try {
           console.log('Verifying token...');
           
-          // Use the API service instead of direct fetch
-          const response = await fetch('http://localhost:5000/api/profile/me', {
+          // Use environment variable for API URL
+          const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+          const response = await fetch(`${apiBaseUrl}/profile/me`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'

@@ -14,7 +14,8 @@ class SocketService {
         return null;
       }
 
-      this.socket = io('http://localhost:5000', {
+      const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+      this.socket = io(socketUrl, {
         transports: ['websocket', 'polling'],
         autoConnect: true,
         reconnection: true,
