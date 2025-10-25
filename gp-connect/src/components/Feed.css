@@ -39,12 +39,15 @@ body {
 .post-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 1.25rem 1.5rem 0.5rem 1.5rem;
   background: var(--chat-input-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--chat-border);
   position: relative;
 }
+
+
 
 .avatar {
   background: linear-gradient(135deg, #20354e 0%, #909EAE 100%);
@@ -361,7 +364,10 @@ body {
     padding: 1rem 1.2rem 0.8rem;
     background: rgba(30, 41, 59, 0.8);
     border-bottom: 1px solid rgba(92, 141, 197, 0.15);
+    justify-content: space-between;
   }
+
+
 
   .post-body {
     padding: 1rem 1.2rem 1.2rem;

@@ -85,7 +85,15 @@ export const profileAPI = {
 
 export const postsAPI = {
   getPosts: () => API.get('/posts'),
-  createPost: (data) => API.post('/posts', data),
+  createPost: (data) => {
+    // Check if data is FormData (contains file upload)
+    if (data instanceof FormData) {
+      return API.post('/posts', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+    return API.post('/posts', data);
+  },
   getUserPosts: (userId) => API.get(`/posts/user/${userId}`),
   updatePost: (postId, data) => API.put(`/posts/${postId}`, data),
   deletePost: (postId) => API.delete(`/posts/${postId}`),

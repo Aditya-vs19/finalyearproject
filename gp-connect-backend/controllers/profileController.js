@@ -95,7 +95,19 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 // @route   POST /api/profile/:id/upload
 // @access  Private
 const uploadProfilePicture = asyncHandler(async (req, res) => {
-  // Check if user exists and is the same user
+  console.log('=== PROFILE PICTURE UPLOAD DEBUG ===');
+  console.log('User ID:', req.params.id);
+  console.log('File received:', !!req.file);
+  console.log('File details:', {
+    originalname: req.file?.originalname,
+    mimetype: req.file?.mimetype,
+    size: req.file?.size,
+    path: req.file?.path,
+    filename: req.file?.filename
+  });
+  console.log('File path contains profileimages:', req.file?.path?.includes('profileimages'));
+  console.log('=====================================');
+
   const user = await User.findById(req.params.id);
   if (!user) {
     res.status(404);
@@ -112,13 +124,23 @@ const uploadProfilePicture = asyncHandler(async (req, res) => {
     throw new Error('No image file provided');
   }
 
-  // Update profile picture path
-  user.profilePic = `/uploads/${req.file.filename}`;
+  const oldProfilePic = user.profilePic;
+  user.profilePic = req.file.path;
   await user.save();
+
+  console.log('Profile updated:', {
+    oldPic: oldProfilePic,
+    newPic: user.profilePic,
+    correctFolder: user.profilePic.includes('profileimages')
+  });
 
   res.json({
     message: 'Profile picture updated successfully',
     profilePic: user.profilePic,
+    debug: {
+      folder: req.file.path.includes('profileimages') ? 'profileimages' : 'posts',
+      filename: req.file.filename
+    }
   });
 });
 

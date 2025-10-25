@@ -16,7 +16,8 @@
     "migrate:run": "node scripts/migrateImages.js migrate",
     "migrate:dry-run": "node scripts/migrateImages.js migrate --dry-run",
     "migrate:rollback": "node scripts/migrateImages.js rollback",
-    "migrate:cleanup": "node scripts/migrateImages.js cleanup"
+    "migrate:cleanup": "node scripts/migrateImages.js cleanup",
+    "migrate:profile-pics": "node scripts/migrateProfilePictures.js"
   },
   "name": "gp-connect-backend",
   "version": "1.0.0",

@@ -1,6 +1,8 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
-import { uploadSingle } from '../middleware/cloudinaryUpload.js';
+import multer from 'multer';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import cloudinaryService from '../services/cloudinaryService.js';
 import {
   getUserProfile,
   updateUserProfile,
@@ -15,6 +17,48 @@ import {
 } from '../controllers/profileController.js';
 
 const router = express.Router();
+
+// Configure Cloudinary service
+try {
+  cloudinaryService.configure();
+  console.log('✅ Cloudinary configured for profile uploads');
+} catch (error) {
+  console.error('❌ Failed to configure Cloudinary:', error.message);
+}
+
+// Simple Cloudinary storage for profile pictures
+const profileStorage = new CloudinaryStorage({
+  cloudinary: cloudinaryService.cloudinary,
+  params: {
+    folder: 'gp-connect-profileimages',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [
+      { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+      { quality: 'auto', fetch_format: 'auto' }
+    ],
+    public_id: (req, file) => {
+      // Create unique filename with user ID and timestamp
+      const uniqueId = `profile_${req.params.id}_${Date.now()}`;
+      console.log('🖼️ Creating profile pic with ID:', uniqueId);
+      return uniqueId;
+    }
+  }
+});
+
+console.log('📁 Profile storage configured for folder: gp-connect-profileimages');
+
+// Simple multer upload for profile pictures
+const profileUpload = multer({
+  storage: profileStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files allowed'), false);
+    }
+  }
+});
 
 // Get current user profile
 router.get('/me', protect, getCurrentUserProfile);
@@ -33,7 +77,7 @@ router.get('/:id', protect, getUserProfile);
 router.put('/:id', protect, updateUserProfile);
 
 // Upload profile picture
-router.post('/:id/upload', protect, uploadSingle('profilePic'), uploadProfilePicture);
+router.post('/:id/upload', protect, profileUpload.single('profilePic'), uploadProfilePicture);
 
 // Change password
 router.put('/:id/password', protect, changePassword);

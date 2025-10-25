@@ -413,7 +413,7 @@ const PostsTab = ({ userProfile, isOwnProfile, currentUser, onFollowUpdate }) =>
                 <div className="post-header">
                   <div className="post-user-info">
                     <img
-                      src={post.userId.profilePic || '/default-avatar.svg'}
+                      src={post.userId.profilePic ? `${post.userId.profilePic}?t=${Date.now()}` : '/default-avatar.svg'}
                       alt="Profile"
                       className="post-user-avatar"
                       onError={(e) => {
@@ -425,29 +425,30 @@ const PostsTab = ({ userProfile, isOwnProfile, currentUser, onFollowUpdate }) =>
                       <p className="post-time">{formatDate(post.createdAt)}</p>
                     </div>
                   </div>
-                  <div className="post-actions">
-                    <button
-                      onClick={() => handleEdit(post)}
-                      className="action-btn edit-btn"
-                      title="Edit post"
-                      style={{ display: isOwnProfile ? 'flex' : 'none' }}
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(post)}
-                      className="action-btn delete-btn"
-                      title="Delete post"
-                      disabled={deleting === post._id}
-                      style={{ display: isOwnProfile ? 'flex' : 'none' }}
-                    >
-                      {deleting === post._id ? (
-                        <div className="mini-spinner"></div>
-                      ) : (
-                        "DELETE"
-                      )}
-                    </button>
-                  </div>
+                  {/* Only show edit/delete buttons if this is the current user's post */}
+                  {currentUser && post.userId && post.userId._id === currentUser._id && (
+                    <div className="post-actions">
+                      <button
+                        onClick={() => handleEdit(post)}
+                        className="action-btn edit-btn"
+                        title="Edit post"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(post)}
+                        className="action-btn delete-btn"
+                        title="Delete post"
+                        disabled={deleting === post._id}
+                      >
+                        {deleting === post._id ? (
+                          <div className="mini-spinner"></div>
+                        ) : (
+                          <FaTrash />
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="post-content">

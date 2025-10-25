@@ -127,7 +127,10 @@ const ProfilePage = ({ userProfile, onBackToHome, onLogout, onStartChat, isMobil
       setViewedUser(updatedUser);
       setCanMessageTarget(false);
       setUserStats(updatedUser.stats || { totalPosts: 0, totalFollowers: 0, totalFollowing: 0 });
-      setProfilePicPreview(updatedUser.profilePic ? getProfilePicUrl(updatedUser.profilePic) : null);
+      // Add cache busting to force image refresh
+      const profilePicUrl = updatedUser.profilePic ? getProfilePicUrl(updatedUser.profilePic) : null;
+      const cacheBustedUrl = profilePicUrl ? `${profilePicUrl}?t=${Date.now()}` : null;
+      setProfilePicPreview(cacheBustedUrl);
       setFormData({
         fullName: updatedUser.fullName || '',
         bio: updatedUser.bio || '',
@@ -243,9 +246,9 @@ const ProfilePage = ({ userProfile, onBackToHome, onLogout, onStartChat, isMobil
           <div className="profile-header-section">
             <div className="profile-picture-container">
               <img
-                src={profilePicPreview || getProfilePicUrl(displayUser?.profilePic)}
-        alt="Profile"
-        className="profile-picture"
+                src={profilePicPreview || (displayUser?.profilePic ? `${getProfilePicUrl(displayUser.profilePic)}?t=${Date.now()}` : '/default-avatar.svg')}
+                alt="Profile"
+                className="profile-picture"
                 onError={(e) => handleImageError(e, '/default-avatar.svg')}
               />
               {isOwnProfile && isEditing && (

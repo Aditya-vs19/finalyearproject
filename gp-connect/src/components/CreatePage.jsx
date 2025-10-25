@@ -34,15 +34,28 @@ export default function CreatePage() {
     setIsPosting(true);
     setPostMessage({ type: '', text: '' });
     
+    console.log('Creating post with:', {
+      caption: postText,
+      hasImage: !!selectedImage,
+      imageSize: selectedImage?.size,
+      imageType: selectedImage?.type
+    });
+    
     const formData = new FormData();
     formData.append('caption', postText);
     if (selectedImage) {
       formData.append('image', selectedImage);
+      console.log('Image file details:', {
+        name: selectedImage.name,
+        size: selectedImage.size,
+        type: selectedImage.type
+      });
     }
 
     try {
+      console.log('Sending request to create post...');
       const response = await postsAPI.createPost(formData);
-      console.log('Post created:', response.data);
+      console.log('Post created successfully:', response.data);
       
       // Reset form
       setPostText('');
@@ -63,9 +76,20 @@ export default function CreatePage() {
       }, 1000);
     } catch (error) {
       console.error('Error creating post:', error);
+      
+      let errorMessage = 'Failed to create post. Please try again.';
+      
+      if (error.response?.data?.userMessage) {
+        errorMessage = error.response.data.userMessage;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       setPostMessage({ 
         type: 'error', 
-        text: error.response?.data?.message || 'Failed to create post. Please try again.' 
+        text: errorMessage
       });
       setIsPosting(false);
     }

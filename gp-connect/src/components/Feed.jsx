@@ -386,19 +386,7 @@ export default function Feed({ onNavigateToProfile }) {
 
   return (
     <div className="posts-container">
-      {Object.keys(imageErrors).length > 0 && (
-        <div className="image-error-notification">
-          <p>
-            Some images failed to load ({Object.keys(imageErrors).length} errors)
-          </p>
-          <button 
-            onClick={retryFailedImages}
-            className="retry-all-button"
-          >
-            Retry All Failed Images
-          </button>
-        </div>
-      )}
+
       {posts.map((post) => {
         const postState = postStates[post._id];
         const user = post.userId || post.user;
