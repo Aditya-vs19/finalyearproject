@@ -136,6 +136,55 @@ class CloudinaryService {
       return false;
     }
   }
+
+  /**
+   * Get basic health status synchronously (for middleware)
+   * @returns {Object} Basic health status information
+   */
+  getHealthStatus() {
+    return {
+      isHealthy: this.isConfigured,
+      isConfigured: this.isConfigured,
+      status: this.isConfigured ? 'configured' : 'not_configured',
+      message: this.isConfigured ? 'Cloudinary is configured' : 'Cloudinary not configured'
+    };
+  }
+
+  /**
+   * Get detailed health status of Cloudinary service (async)
+   * @returns {Promise<Object>} Detailed health status information
+   */
+  async getDetailedHealthStatus() {
+    try {
+      if (!this.isConfigured) {
+        return {
+          status: 'unhealthy',
+          message: 'Cloudinary not configured',
+          configured: false,
+          connected: false
+        };
+      }
+
+      const isConnected = await this.testConnection();
+      
+      return {
+        status: isConnected ? 'healthy' : 'unhealthy',
+        message: isConnected ? 'Cloudinary service is operational' : 'Cloudinary connection failed',
+        configured: true,
+        connected: isConnected,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        message: `Health check failed: ${error.message}`,
+        configured: this.isConfigured,
+        connected: false,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
 }
 
 // Create and export singleton instance

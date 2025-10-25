@@ -590,7 +590,8 @@ export const sendMessage = async (req, res) => {
     };
 
     if (isImageUpload) {
-      newMessage.image = req.file.filename;
+      // Use Cloudinary URL from req.file.path (same as posts)
+      newMessage.image = req.file.path;
       newMessage.messageType = 'image';
       newMessage.content = content ? content.trim() : '';
     } else {

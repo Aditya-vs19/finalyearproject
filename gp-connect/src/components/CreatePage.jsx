@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import './CreatePage.css';
-import { FaImage, FaSmile, FaMapMarkerAlt, FaGlobe, FaUsers, FaUserFriends, FaUser } from 'react-icons/fa';
+import { FaImage } from 'react-icons/fa';
 import { postsAPI } from '../services/api';
 
 export default function CreatePage() {
   const [postText, setPostText] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [privacy, setPrivacy] = useState('public');
   const [isPosting, setIsPosting] = useState(false);
   const [postMessage, setPostMessage] = useState({ type: '', text: '' });
 
@@ -49,7 +48,6 @@ export default function CreatePage() {
       setPostText('');
       setSelectedImage(null);
       setImagePreview(null);
-      setPrivacy('public');
       setIsPosting(false);
       
       setPostMessage({ type: 'success', text: 'Post created successfully!' });
@@ -73,11 +71,7 @@ export default function CreatePage() {
     }
   };
 
-  const privacyOptions = [
-    { value: 'public', label: 'Public', icon: <FaGlobe /> },
-    { value: 'friends', label: 'Friends', icon: <FaUserFriends /> },
-    { value: 'private', label: 'Private', icon: <FaUser /> }
-  ];
+
 
   return (
     <div className="create-page">
@@ -128,30 +122,6 @@ export default function CreatePage() {
                   style={{ display: 'none' }}
                 />
               </label>
-              
-              <button className="action-btn">
-                <FaSmile />
-                <span>Feeling</span>
-              </button>
-              
-              <button className="action-btn">
-                <FaMapMarkerAlt />
-                <span>Location</span>
-              </button>
-            </div>
-
-            <div className="privacy-selector">
-              <select
-                value={privacy}
-                onChange={(e) => setPrivacy(e.target.value)}
-                className="privacy-select"
-              >
-                {privacyOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.icon} {option.label}
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
 

@@ -4,10 +4,17 @@ import { communitiesAPI, profileAPI } from '../services/api.js';
 import socketService from '../services/socket.js';
 import { getProfilePicUrl, handleImageError } from '../utils/imageUtils.js';
 
-const getCommunityImageUrl = (imageName) => {
-  if (!imageName) return null;
+const getCommunityImageUrl = (imageUrl) => {
+  if (!imageUrl) return null;
+  
+  // If it's already a full URL (Cloudinary), return as-is
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+  
+  // For legacy local images, construct the local URL
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-  return `${baseUrl.replace('/api', '')}/uploads/community-images/${imageName}`;
+  return `${baseUrl.replace('/api', '')}/uploads/community-images/${imageUrl}`;
 };
 
 const MAX_VISIBLE_MEMBERS = 16;

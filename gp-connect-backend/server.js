@@ -16,6 +16,7 @@ import conversationRoutes from './routes/conversationRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import imageMonitoringRoutes from './routes/imageMonitoring.js';
+import healthRoutes from './routes/healthRoutes.js';
 import initializeCommunities from './utils/initializeCommunities.js';
 import { configureChatSocket } from './socket/chatSocket.js';
 import cloudinaryService from './services/cloudinaryService.js';
@@ -74,6 +75,7 @@ app.use('/api/conversations', conversationRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/image-monitoring', imageMonitoringRoutes);
+app.use('/api/health', healthRoutes);
 
 
 // Socket.IO connection handling with JWT authentication
