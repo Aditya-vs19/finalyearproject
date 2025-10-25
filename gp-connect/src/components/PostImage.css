@@ -1,0 +1,300 @@
+/* PostImage Component Styles */
+
+.post-image-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-image-container.loading {
+  background-color: #f0f0f0;
+}
+
+/* Main image styles */
+.post-image {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  border-radius: 8px;
+  transition: opacity 0.3s ease;
+  object-fit: cover;
+}
+
+.post-image.loading {
+  opacity: 0;
+}
+
+/* Loading overlay */
+.image-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(240, 240, 240, 0.9);
+  z-index: 2;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e0e0e0;
+  border-top: 3px solid #5C8DC5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.image-loading-overlay p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Error and placeholder states */
+.image-error-placeholder,
+.image-retry-placeholder,
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 200px;
+  padding: 20px;
+  text-align: center;
+}
+
+.placeholder-img {
+  max-width: 150px;
+  max-height: 100px;
+  opacity: 0.6;
+  margin-bottom: 12px;
+}
+
+.error-message,
+.retry-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-message p,
+.retry-message p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.error-type {
+  font-size: 12px !important;
+  color: #999 !important;
+  font-weight: 400 !important;
+  font-style: italic;
+  margin-top: 4px !important;
+  text-transform: capitalize;
+}
+
+/* Retry button */
+.retry-button {
+  background-color: #5C8DC5;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.retry-button:hover {
+  background-color: #4a7bb0;
+  transform: translateY(-1px);
+}
+
+.retry-button:active {
+  transform: translateY(0);
+}
+
+.retry-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Retry indicator */
+.retry-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(92, 141, 197, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  z-index: 3;
+}
+
+/* State-specific styling */
+.post-image-container.error-state {
+  background-color: #fafafa;
+  border: 1px dashed #ddd;
+}
+
+.post-image-container.retry-state {
+  background-color: #fff8e1;
+  border: 1px dashed #ffb74d;
+}
+
+.post-image-container.no-image {
+  background-color: #f9f9f9;
+  border: 1px dashed #e0e0e0;
+}
+
+.post-image-container.localhost-unavailable {
+  background-color: #f3e5f5;
+  border: 1px dashed #ba68c8;
+}
+
+.localhost-unavailable .error-message p {
+  color: #7b1fa2;
+}
+
+.localhost-unavailable .error-type {
+  color: #ba68c8 !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .post-image-container {
+    min-height: 150px;
+  }
+  
+  .placeholder-img {
+    max-width: 120px;
+    max-height: 80px;
+  }
+  
+  .error-message p,
+  .retry-message p {
+    font-size: 13px;
+  }
+  
+  .retry-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .post-image-container {
+    background-color: #2a2a2a;
+  }
+  
+  .post-image-container.loading {
+    background-color: #333;
+  }
+  
+  .image-loading-overlay {
+    background-color: rgba(42, 42, 42, 0.9);
+  }
+  
+  .image-loading-overlay p,
+  .error-message p,
+  .retry-message p {
+    color: #ccc;
+  }
+  
+  .loading-spinner {
+    border-color: #555;
+    border-top-color: #5C8DC5;
+  }
+  
+  .post-image-container.error-state {
+    background-color: #2a2a2a;
+    border-color: #555;
+  }
+  
+  .post-image-container.retry-state {
+    background-color: #3a3520;
+    border-color: #ffb74d;
+  }
+  
+  .post-image-container.no-image {
+    background-color: #2a2a2a;
+    border-color: #555;
+  }
+  
+  .post-image-container.localhost-unavailable {
+    background-color: #3a2a3a;
+    border-color: #ba68c8;
+  }
+  
+  .localhost-unavailable .error-message p {
+    color: #ce93d8;
+  }
+}
+
+/* Animation for smooth transitions */
+.post-image-container {
+  transition: all 0.3s ease;
+}
+
+.post-image {
+  transition: opacity 0.3s ease, transform 0.2s ease;
+}
+
+.post-image:hover {
+  transform: scale(1.02);
+}
+
+/* Accessibility improvements */
+.retry-button:focus {
+  outline: 2px solid #5C8DC5;
+  outline-offset: 2px;
+}
+
+.post-image:focus {
+  outline: 2px solid #5C8DC5;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .post-image-container {
+    border: 2px solid #000;
+  }
+  
+  .retry-button {
+    border: 2px solid #000;
+  }
+  
+  .error-message p,
+  .retry-message p {
+    color: #000;
+    font-weight: bold;
+  }
+}

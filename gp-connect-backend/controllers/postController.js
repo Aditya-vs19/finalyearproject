@@ -3,26 +3,122 @@ import Post from '../models/Post.js';
 import User from '../models/User.js';
 import { createNotification } from './notificationController.js';
 import cloudinaryService from '../services/cloudinaryService.js';
+import { validateUploadedImage } from '../utils/imageValidation.js';
+import { 
+  logImageUpload, 
+  logImageValidation, 
+  logImageError, 
+  logImagePerformance,
+  LOG_LEVELS 
+} from '../utils/imageLogger.js';
 
 // @desc    Create a new post
 // @route   POST /api/posts
 // @access  Private
 const createPost = asyncHandler(async (req, res) => {
+  const startTime = Date.now();
+  const userId = req.user._id;
+  const { caption } = req.body;
+  
+  // Comprehensive logging for image upload and validation process
+  logImageUpload(LOG_LEVELS.INFO, 'Post creation started', {
+    userId: userId.toString(),
+    hasImage: !!req.file,
+    captionLength: caption ? caption.length : 0,
+    userAgent: req.get('User-Agent'),
+    ip: req.ip
+  });
+
   try {
-    const { caption } = req.body;
-    
     // Handle Cloudinary image URL - req.file.path contains the Cloudinary URL
     let image = null;
+    let imageValidationResult = null;
+    
     if (req.file) {
+      const uploadStartTime = Date.now();
       image = req.file.path; // Cloudinary URL from multer-storage-cloudinary
+      const uploadDuration = Date.now() - uploadStartTime;
+      
+      // Log successful upload with comprehensive context
+      logImageUpload(LOG_LEVELS.INFO, 'Image uploaded to Cloudinary successfully', {
+        userId: userId.toString(),
+        cloudinaryUrl: image,
+        filename: req.file.originalname,
+        fileSize: req.file.size,
+        mimeType: req.file.mimetype,
+        publicId: req.file.public_id || 'unknown',
+        duration: uploadDuration
+      });
+
+      // Add immediate image accessibility check after Cloudinary upload
+      logImageValidation(LOG_LEVELS.INFO, 'Starting post-upload image validation', {
+        url: image,
+        userId: userId.toString(),
+        validationType: 'post_upload',
+        originalFilename: req.file.originalname
+      });
+
+      const validationStartTime = Date.now();
+      imageValidationResult = await validateUploadedImage(image, {
+        userId: userId.toString(),
+        operation: 'post_creation',
+        originalFilename: req.file.originalname,
+        fileSize: req.file.size
+      });
+      const validationDuration = Date.now() - validationStartTime;
+
+      // Log validation results with comprehensive context
+      logImageValidation(
+        imageValidationResult?.isAccessible ? LOG_LEVELS.INFO : LOG_LEVELS.WARN,
+        `Image validation ${imageValidationResult?.isAccessible ? 'succeeded' : 'failed'}`,
+        {
+          url: image,
+          userId: userId.toString(),
+          isAccessible: imageValidationResult?.isAccessible,
+          attempts: imageValidationResult?.attempts,
+          responseTime: validationDuration,
+          validationType: 'post_upload',
+          error: imageValidationResult?.lastError?.message
+        }
+      );
+
+      // Handle cases where uploaded images are not immediately accessible
+      if (!imageValidationResult?.isAccessible) {
+        logImageError(new Error('Uploaded image not immediately accessible'), {
+          operation: 'post_upload_validation',
+          userId: userId.toString(),
+          url: image,
+          attempts: imageValidationResult?.attempts,
+          additionalData: {
+            originalFilename: req.file.originalname,
+            fileSize: req.file.size,
+            publicId: req.file.public_id
+          }
+        });
+
+        // Continue with post creation but log the issue for monitoring
+        // In production, you might want to implement different strategies:
+        // 1. Retry the validation after a delay
+        // 2. Queue the post for later processing
+        // 3. Return an error to the user
+        // For now, we'll continue but add a warning flag
+      }
     }
 
     // Check if user is super admin to make post globally visible
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(userId);
     const isSuperAdmin = user && user.isAdmin && user.adminLevel === 'super';
 
+    console.info('Creating post in database:', {
+      userId,
+      hasImage: !!image,
+      isSuperAdmin,
+      imageValidated: imageValidationResult?.isAccessible,
+      timestamp: new Date().toISOString()
+    });
+
     const post = new Post({
-      userId: req.user._id,
+      userId,
       caption,
       image,
       isGlobalPost: isSuperAdmin, // Super admin posts are globally visible
@@ -31,15 +127,73 @@ const createPost = asyncHandler(async (req, res) => {
 
     const createdPost = await post.save();
     
-    // Maintain existing API response format for backward compatibility
-    res.status(201).json(createdPost);
-  } catch (error) {
-    console.error('Error creating post:', error);
+    const processingTime = Date.now() - startTime;
     
-    // Handle cloud upload failures gracefully
+    console.info('Post created successfully:', {
+      userId,
+      postId: createdPost._id,
+      hasImage: !!image,
+      imageValidated: imageValidationResult?.isAccessible,
+      processingTimeMs: processingTime,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Maintain existing API response format for backward compatibility
+    // Add validation info for debugging purposes (can be removed in production)
+    const postData = createdPost.toObject ? createdPost.toObject() : createdPost;
+    const response = {
+      ...postData,
+      _debug: {
+        imageValidation: imageValidationResult ? {
+          isAccessible: imageValidationResult.isAccessible,
+          attempts: imageValidationResult.attempts,
+          hasError: !!imageValidationResult.lastError
+        } : null,
+        processingTimeMs: processingTime
+      }
+    };
+    
+    res.status(201).json(response);
+  } catch (error) {
+    const processingTime = Date.now() - startTime;
+    
+    console.error('Error creating post:', {
+      userId,
+      error: {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      },
+      hasImage: !!req.file,
+      imageUrl: req.file?.path,
+      processingTimeMs: processingTime,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Enhanced error handling for cases where uploaded images are not immediately accessible
     if (error.message && error.message.includes('Cloudinary')) {
+      console.error('Cloudinary-specific error during post creation:', {
+        userId,
+        error: error.message,
+        imageUrl: req.file?.path,
+        timestamp: new Date().toISOString()
+      });
+      
       res.status(500);
       throw new Error('Image upload failed. Please try again.');
+    }
+
+    // Handle image validation failures specifically
+    if (error.message && error.message.includes('image validation')) {
+      console.error('Image validation error during post creation:', {
+        userId,
+        error: error.message,
+        imageUrl: req.file?.path,
+        timestamp: new Date().toISOString()
+      });
+      
+      res.status(500);
+      throw new Error('Image validation failed. The uploaded image may not be accessible. Please try again.');
     }
     
     // Re-throw other errors to be handled by error middleware

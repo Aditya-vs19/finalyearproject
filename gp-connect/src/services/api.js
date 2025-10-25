@@ -5,7 +5,10 @@ const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || defaultBaseUrl;
 
 const API = axios.create({
   baseURL: apiBaseUrl,
-  timeout: 10000,
+  timeout: 30000, // Increased timeout
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 // Add auth token to requests
@@ -17,10 +20,33 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
+// Add request interceptor for debugging
+API.interceptors.request.use(
+  (config) => {
+    console.log('API Request:', config.method?.toUpperCase(), config.url);
+    return config;
+  },
+  (error) => {
+    console.error('API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
 // Handle response errors
 API.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API Response:', response.status, response.config.url);
+    return response;
+  },
   (error) => {
+    console.error('API Response Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data
+    });
+    
     if (error.response?.status === 401) {
       // Handle unauthorized access
       localStorage.removeItem('token');

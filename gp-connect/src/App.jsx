@@ -32,10 +32,14 @@ function App() {
       const verifyToken = async () => {
         try {
           console.log('Verifying token...');
+          
+          // Use the API service instead of direct fetch
           const response = await fetch('http://localhost:5000/api/profile/me', {
             headers: {
-              'Authorization': `Bearer ${token}`
-            }
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 10000
           });
           
           console.log('Token verification response status:', response.status);
@@ -60,7 +64,10 @@ function App() {
           }
         } catch (error) {
           console.error('Token verification failed:', error);
-          localStorage.removeItem('token');
+          // Don't remove token on network errors, only on auth errors
+          if (error.name !== 'TypeError' && !error.message.includes('fetch')) {
+            localStorage.removeItem('token');
+          }
         } finally {
           console.log('Setting loading to false');
           setIsLoading(false);

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaImage, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
 import { postsAPI, profileAPI } from '../services/api';
+import PostImage from './PostImage.jsx';
+import ImageErrorBoundary, { useImageErrorHandler } from './ImageErrorBoundary.jsx';
+import { globalImageErrorHandler } from '../services/imageErrorHandler.js';
 import PrivatePostsLock from './PrivatePostsLock';
 import './PostsTab.css';
 
@@ -23,6 +26,18 @@ const PostsTab = ({ userProfile, isOwnProfile, currentUser, onFollowUpdate }) =>
   const [isFollowing, setIsFollowing] = useState(false);
   const [showLockedState, setShowLockedState] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  
+  // Image error handling
+  const imageErrorHandler = useImageErrorHandler({
+    componentName: 'PostsTab',
+    onError: (error, context) => {
+      console.error('PostsTab image error:', error, context);
+      setMessage({ 
+        type: 'warning', 
+        text: 'Some images failed to load. They will be retried automatically.' 
+      });
+    }
+  });
 
 
   useEffect(() => {
@@ -439,10 +454,39 @@ const PostsTab = ({ userProfile, isOwnProfile, currentUser, onFollowUpdate }) =>
                   <p>{post.caption}</p>
                   {post.image && (
                     <div className="post-image">
-                      <img
-                        src={`http://localhost:5000${post.image}`}
-                        alt="Post"
-                      />
+                      <ImageErrorBoundary
+                        imageUrl={post.image}
+                        componentName="PostsTab-PostImage"
+                        imageType="post"
+                        onError={(error) => {
+                          imageErrorHandler.handleError(error, {
+                            postId: post._id,
+                            imageUrl: post.image,
+                            userId: post.userId._id
+                          });
+                        }}
+                      >
+                        <PostImage
+                          src={post.image}
+                          alt={`Post by ${post.userId.fullName}`}
+                          className="post-img"
+                          maxRetries={3}
+                          retryDelay={1000}
+                          showRetryButton={true}
+                          onLoad={() => {
+                            console.log(`Image loaded successfully for post ${post._id}`);
+                            imageErrorHandler.clearError();
+                          }}
+                          onError={(error) => {
+                            console.error(`Image failed to load for post ${post._id}:`, error);
+                            imageErrorHandler.handleError(error, {
+                              postId: post._id,
+                              imageUrl: post.image,
+                              userId: post.userId._id
+                            });
+                          }}
+                        />
+                      </ImageErrorBoundary>
                     </div>
                   )}
                 </div>

@@ -54,11 +54,7 @@ app.use(cors({
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Debug routes (only in development)
-if (process.env.NODE_ENV !== 'production') {
-  const debugRoutes = (await import('./routes/debugRoutes.js')).default;
-  app.use('/api', debugRoutes);
-}
+
 
 // Make io available to routes via middleware
 app.use((req, res, next) => {

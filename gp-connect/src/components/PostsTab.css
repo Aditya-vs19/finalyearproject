@@ -421,12 +421,74 @@
   border-radius: var(--settings-border-radius, 20px);
   overflow: hidden;
   border: 1px solid rgba(92, 141, 197, 0.2);
+  position: relative;
+  min-height: 200px;
+  background: rgba(51, 65, 85, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .post-image img {
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* Enhanced image loading states for PostsTab */
+.post-image .post-image-container {
+  width: 100%;
+  min-height: 200px;
+}
+
+.post-image .image-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(51, 65, 85, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.post-image .image-error-placeholder,
+.post-image .image-retry-placeholder {
+  width: 100%;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(51, 65, 85, 0.5);
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  padding: 2rem;
+}
+
+.post-image .error-message,
+.post-image .retry-message {
+  margin-top: 1rem;
+}
+
+.post-image .retry-button {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(92, 141, 197, 0.8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.post-image .retry-button:hover {
+  background: rgba(92, 141, 197, 1);
+  transform: translateY(-1px);
 }
 
 /* Post Stats and Interactions */

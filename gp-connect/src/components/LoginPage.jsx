@@ -22,13 +22,31 @@ function LoginPage({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
     setError('');
     setIsLoading(true);
     
+    console.log('Login attempt:', { email, passwordLength: password.length });
+    
     try {
       const response = await authAPI.login({ email, password });
+      console.log('Login successful:', response.data);
       localStorage.setItem('token', response.data.token);
       onLogin();
     } catch (error) {
-      console.error('Login failed:', error.response?.data || error.message);
-      const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      console.error('Login failed:', {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: error.config
+      });
+      
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
+        errorMessage = 'Cannot connect to server. Please check if the backend is running.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
       setError(errorMessage);
     }
     setIsLoading(false);

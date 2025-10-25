@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import './Feed.css';
 import { postsAPI } from '../services/api';
 import { getProfilePicUrl, getPostImageUrl, handleImageError } from '../utils/imageUtils.js';
+import PostImage from './PostImage.jsx';
+import ImageErrorBoundary, { useImageErrorHandler } from './ImageErrorBoundary.jsx';
+import { globalImageErrorHandler } from '../services/imageErrorHandler.js';
 import socketService from '../services/socket.js';
 
 export const getFeeds = async () => {
@@ -23,12 +26,72 @@ export default function Feed({ onNavigateToProfile }) {
   const [error, setError] = useState('');
   const [postStates, setPostStates] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
+  const [imageErrors, setImageErrors] = useState({});
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Debug: Track posts changes
-  useEffect(() => {
-    console.log('🔄 Posts state changed. New length:', posts.length);
-    console.log('📝 Current posts:', posts);
-  }, [posts]);
+  // Use image error handler hook
+  const imageErrorHandler = useImageErrorHandler({
+    componentName: 'Feed',
+    onError: (error, context) => {
+      console.error('Feed image error:', error, context);
+    }
+  });
+
+
+
+  // Enhanced image loading error tracking
+  const handleImageError = (postId, error) => {
+    console.error(`Image failed to load for post ${postId}:`, error);
+    
+    // Use global error handler for comprehensive tracking
+    const post = posts.find(p => p._id === postId);
+    const imageUrl = post?.image;
+    
+    if (imageUrl) {
+      imageErrorHandler.handleError(error, {
+        postId,
+        imageUrl,
+        userId: post?.userId?._id || post?.user?._id
+      });
+    }
+    
+    setImageErrors(prev => ({
+      ...prev,
+      [postId]: {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+        retryCount: (prev[postId]?.retryCount || 0) + 1
+      }
+    }));
+  };
+
+  const handleImageLoad = (postId) => {
+    console.log(`Image loaded successfully for post ${postId}`);
+    
+    // Clear error state
+    imageErrorHandler.clearError();
+    
+    // Clear any previous errors for this post
+    setImageErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[postId];
+      return newErrors;
+    });
+  };
+
+  // Enhanced retry with error handler reset
+  const retryFailedImages = () => {
+    // Clear global error handler stats for this session
+    globalImageErrorHandler.clearStats();
+    
+    // Clear local error state
+    setImageErrors({});
+    imageErrorHandler.clearError();
+    setRetryCount(prev => prev + 1);
+    
+    // Force re-render of images by updating a key
+    setPosts(prev => [...prev]);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -289,11 +352,20 @@ export default function Feed({ onNavigateToProfile }) {
               border: 'none',
               padding: '0.5rem 1rem',
               borderRadius: '5px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              marginRight: '0.5rem'
             }}
           >
             Retry
           </button>
+          {Object.keys(imageErrors).length > 0 && (
+            <button 
+              onClick={retryFailedImages}
+              className="retry-all-button"
+            >
+              Retry Failed Images ({Object.keys(imageErrors).length})
+            </button>
+          )}
         </div>
       </div>
     );
@@ -314,6 +386,19 @@ export default function Feed({ onNavigateToProfile }) {
 
   return (
     <div className="posts-container">
+      {Object.keys(imageErrors).length > 0 && (
+        <div className="image-error-notification">
+          <p>
+            Some images failed to load ({Object.keys(imageErrors).length} errors)
+          </p>
+          <button 
+            onClick={retryFailedImages}
+            className="retry-all-button"
+          >
+            Retry All Failed Images
+          </button>
+        </div>
+      )}
       {posts.map((post) => {
         const postState = postStates[post._id];
         const user = post.userId || post.user;
@@ -355,12 +440,25 @@ export default function Feed({ onNavigateToProfile }) {
               </div>
             </div>
             {post.image && (
-              <img 
-                src={getPostImageUrl(post.image)} 
-                alt={post.caption} 
-                className="post-img"
-                onError={(e) => handleImageError(e, 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+')}
-              />
+              <ImageErrorBoundary
+                imageUrl={post.image}
+                componentName="Feed-PostImage"
+                imageType="post"
+                onError={(error) => handleImageError(post._id, error)}
+              >
+                <PostImage
+                  key={`${post._id}-${retryCount}`}
+                  src={post.image}
+                  alt={post.caption || `Post by ${user.fullName || 'User'}`}
+                  className="post-img"
+                  maxRetries={3}
+                  retryDelay={1000}
+                  showRetryButton={true}
+                  onLoad={() => handleImageLoad(post._id)}
+                  onError={(error) => handleImageError(post._id, error)}
+                  placeholder="/default-post-image.svg"
+                />
+              </ImageErrorBoundary>
             )}
             <div className="post-body">
               <p>

@@ -1,4 +1,5 @@
 {
     "chat.agent.maxRequests": 100,
-    "kiroAgent.configureMCP": "Disabled"
+    "kiroAgent.configureMCP": "Disabled",
+    "javascript.autoClosingTags": false
 }
