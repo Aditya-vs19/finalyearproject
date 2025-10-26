@@ -33,12 +33,20 @@ const getEnrollmentPrefix = (admissionYear, departmentCode) => {
 export const validateEnrollmentFormat = ({ enrollment, admissionYear, departmentCode }) => {
   const sanitizedEnrollment = typeof enrollment === 'string' ? enrollment.trim() : '';
 
+  console.log('Enrollment validation debug:', {
+    original: enrollment,
+    sanitized: sanitizedEnrollment,
+    length: sanitizedEnrollment.length,
+    type: typeof enrollment,
+    regexTest: /^\d{7}$/.test(sanitizedEnrollment)
+  });
+
   if (!sanitizedEnrollment) {
     return { valid: false, message: 'Enrollment number is required' };
   }
 
   if (!/^\d{7}$/.test(sanitizedEnrollment)) {
-    return { valid: false, message: 'Enrollment number must be exactly 7 digits' };
+    return { valid: false, message: `Enrollment number must be exactly 7 digits. Got: "${sanitizedEnrollment}" (length: ${sanitizedEnrollment.length})` };
   }
 
   if (!isValidAdmissionYear(admissionYear)) {
