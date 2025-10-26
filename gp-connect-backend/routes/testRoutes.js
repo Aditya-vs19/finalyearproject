@@ -1,6 +1,7 @@
 import express from 'express';
 import { uploadSingle } from '../middleware/cloudinaryUpload.js';
 import { protect } from '../middleware/authMiddleware.js';
+import initializeCommunities from '../utils/initializeCommunities.js';
 
 const router = express.Router();
 
@@ -29,6 +30,25 @@ router.post('/upload-test', protect, uploadSingle('testImage'), (req, res) => {
     res.status(400).json({
       success: false,
       message: 'No file uploaded'
+    });
+  }
+});
+
+// Seed communities endpoint (for production setup)
+router.get('/seed-communities', async (req, res) => {
+  try {
+    console.log('Seeding communities...');
+    await initializeCommunities();
+    res.json({
+      success: true,
+      message: 'Communities seeded successfully'
+    });
+  } catch (error) {
+    console.error('Seeding error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to seed communities',
+      error: error.message
     });
   }
 });
