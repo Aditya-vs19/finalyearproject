@@ -1,3 +1,4 @@
+import sgMail from '@sendgrid/mail';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
@@ -7,9 +8,32 @@ const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
   try {
     console.log('Attempting to send email to:', email);
 
-    if (process.env.NODE_ENV === 'production') {
-      // For production on cloud platforms, use a more reliable approach
-      // Try SMTP first, but fallback gracefully if it fails
+    if (process.env.NODE_ENV === 'production' && process.env.SENDGRID_API_KEY) {
+      // Use SendGrid for production
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+      const msg = {
+        to: email,
+        from: {
+          email: process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER,
+          name: 'GP-Connect'
+        },
+        subject: subject,
+        html: htmlMessage,
+        text: textMessage || undefined,
+      };
+
+      try {
+        const response = await sgMail.send(msg);
+        console.log('Email sent successfully via SendGrid!');
+        console.log('SendGrid Response:', response[0].statusCode);
+        return true;
+      } catch (sendGridError) {
+        console.error('SendGrid error:', sendGridError.response?.body || sendGridError.message);
+        throw sendGridError;
+      }
+    } else if (process.env.NODE_ENV === 'production') {
+      // Production fallback without SendGrid - try Gmail SMTP with short timeout
       try {
         const transporter = nodemailer.createTransport({
           service: 'gmail',
@@ -17,7 +41,6 @@ const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
           },
-          // Shorter timeouts for faster failure detection
           connectionTimeout: 10000, // 10 seconds
           greetingTimeout: 5000, // 5 seconds  
           socketTimeout: 10000, // 10 seconds
@@ -32,25 +55,20 @@ const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully via SMTP!');
+        console.log('Email sent successfully via Gmail SMTP!');
         console.log('Message ID:', info.messageId);
         return true;
-
+        
       } catch (smtpError) {
         console.log('SMTP failed, using fallback method:', smtpError.message);
-
-        // Fallback: Log the email content for manual delivery or webhook processing
+        
+        // Fallback: Log the email content
         console.log('=== EMAIL FALLBACK ===');
         console.log('To:', email);
         console.log('Subject:', subject);
         console.log('HTML Content:', htmlMessage);
         console.log('=== END EMAIL ===');
-
-        // In a real production app, you could:
-        // 1. Queue the email for later retry
-        // 2. Use a webhook to external email service
-        // 3. Store in database for manual processing
-
+        
         return true; // Return success to not block user registration
       }
     } else {
@@ -72,13 +90,13 @@ const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
       };
 
       const info = await transporter.sendMail(mailOptions);
-      console.log('Email sent successfully!');
+      console.log('Email sent successfully in development!');
       console.log('Message ID:', info.messageId);
       return true;
     }
   } catch (error) {
     console.error('Error in email service:', error);
-
+    
     if (process.env.NODE_ENV === 'production') {
       // In production, don't fail registration due to email issues
       console.log('Email service failed, but allowing registration to continue');
