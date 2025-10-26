@@ -35,22 +35,22 @@ const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
         console.log('Email sent successfully via SMTP!');
         console.log('Message ID:', info.messageId);
         return true;
-        
+
       } catch (smtpError) {
         console.log('SMTP failed, using fallback method:', smtpError.message);
-        
+
         // Fallback: Log the email content for manual delivery or webhook processing
         console.log('=== EMAIL FALLBACK ===');
         console.log('To:', email);
         console.log('Subject:', subject);
         console.log('HTML Content:', htmlMessage);
         console.log('=== END EMAIL ===');
-        
+
         // In a real production app, you could:
         // 1. Queue the email for later retry
         // 2. Use a webhook to external email service
         // 3. Store in database for manual processing
-        
+
         return true; // Return success to not block user registration
       }
     } else {
@@ -78,7 +78,7 @@ const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
     }
   } catch (error) {
     console.error('Error in email service:', error);
-    
+
     if (process.env.NODE_ENV === 'production') {
       // In production, don't fail registration due to email issues
       console.log('Email service failed, but allowing registration to continue');
