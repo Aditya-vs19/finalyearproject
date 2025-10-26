@@ -7,31 +7,38 @@ const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
   try {
     console.log('Attempting to send email to:', email);
 
+    let transporter;
+    
     if (process.env.NODE_ENV === 'production') {
-      // For production deployment, simulate email sending to avoid SMTP timeouts
-      // This prevents connection timeout errors on cloud platforms like Render
-      console.log('Production mode: Simulating email send');
-      console.log('Email would be sent to:', email);
-      console.log('Subject:', subject);
-      console.log('HTML Content:', htmlMessage);
+      // Use Gmail with App Password for production (more reliable than Ethereal)
+      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.error('Email credentials not configured for production');
+        throw new Error('Email service not configured');
+      }
       
-      // In a real production app, you would use a reliable email service like:
-      // - SendGrid
-      // - AWS SES
-      // - Mailgun
-      // - Postmark
+      transporter = nodemailer.createTransporter({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+        // Add timeout and connection settings for better reliability
+        connectionTimeout: 60000, // 60 seconds
+        greetingTimeout: 30000, // 30 seconds
+        socketTimeout: 60000, // 60 seconds
+      });
       
-      return true;
+      console.log('Using Gmail SMTP for production email sending');
+    } else {
+      // Local development - use Gmail
+      transporter = nodemailer.createTransporter({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
     }
-
-    // Local development - use Gmail
-    const transporter = nodemailer.createTransporter({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
 
     // Email options
     const mailOptions = {
