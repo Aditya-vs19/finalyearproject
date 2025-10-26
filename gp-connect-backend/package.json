@@ -51,6 +51,7 @@
     "nodemon": "^3.1.10",
     "otp-generator": "^4.0.1",
     "prettier": "^3.6.2",
+    "resend": "^6.2.2",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

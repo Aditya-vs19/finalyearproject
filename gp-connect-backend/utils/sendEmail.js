@@ -1,4 +1,4 @@
-import sgMail from '@sendgrid/mail';
+import { Resend } from 'resend';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
@@ -8,32 +8,33 @@ const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
   try {
     console.log('Attempting to send email to:', email);
 
-    if (process.env.NODE_ENV === 'production' && process.env.SENDGRID_API_KEY) {
-      // Use SendGrid for production
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-      const msg = {
-        to: email,
-        from: {
-          email: process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER,
-          name: 'GP-Connect'
-        },
-        subject: subject,
-        html: htmlMessage,
-        text: textMessage || undefined,
-      };
+    if (process.env.NODE_ENV === 'production' && process.env.RESEND_API_KEY) {
+      // Use Resend for production (3000 emails/month free)
+      const resend = new Resend(process.env.RESEND_API_KEY);
 
       try {
-        const response = await sgMail.send(msg);
-        console.log('Email sent successfully via SendGrid!');
-        console.log('SendGrid Response:', response[0].statusCode);
+        const { data, error } = await resend.emails.send({
+          from: `GP-Connect <${process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'}>`,
+          to: [email],
+          subject: subject,
+          html: htmlMessage,
+          text: textMessage || undefined,
+        });
+
+        if (error) {
+          console.error('Resend error:', error);
+          throw new Error(error.message);
+        }
+
+        console.log('Email sent successfully via Resend!');
+        console.log('Resend Email ID:', data.id);
         return true;
-      } catch (sendGridError) {
-        console.error('SendGrid error:', sendGridError.response?.body || sendGridError.message);
-        throw sendGridError;
+      } catch (resendError) {
+        console.error('Resend failed:', resendError.message);
+        throw resendError;
       }
     } else if (process.env.NODE_ENV === 'production') {
-      // Production fallback without SendGrid - try Gmail SMTP with short timeout
+      // Production fallback without Resend - try Gmail SMTP with short timeout
       try {
         const transporter = nodemailer.createTransport({
           service: 'gmail',
