@@ -117,6 +117,15 @@ const verifyOtp = asyncHandler(async (req, res) => {
     throw new Error('No OTP found. Please register again.');
   }
 
+  // Debug OTP comparison
+  console.log('OTP Verification Debug:', {
+    receivedOTP: otp,
+    storedOTP: user.otp,
+    receivedType: typeof otp,
+    storedType: typeof user.otp,
+    match: user.otp === otp
+  });
+
   if (user.otp !== otp) {
     res.status(400);
     throw new Error('Invalid OTP');

@@ -2,6 +2,7 @@ import express from 'express';
 import { uploadSingle } from '../middleware/cloudinaryUpload.js';
 import { protect } from '../middleware/authMiddleware.js';
 import initializeCommunities from '../utils/initializeCommunities.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -50,6 +51,33 @@ router.get('/seed-communities', async (req, res) => {
       message: 'Failed to seed communities',
       error: error.message
     });
+  }
+});
+
+// Check OTP for debugging (production only)
+router.get('/check-otp/:email', async (req, res) => {
+  if (process.env.NODE_ENV !== 'production') {
+    return res.status(403).json({ message: 'Only available in production' });
+  }
+  
+  try {
+    const { email } = req.params;
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    res.json({
+      email: user.email,
+      hasOTP: !!user.otp,
+      otp: user.otp,
+      otpExpires: user.otpExpires,
+      isVerified: user.isVerified,
+      otpExpired: user.otpExpires ? new Date() > user.otpExpires : null
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error checking OTP', error: error.message });
   }
 });
 
