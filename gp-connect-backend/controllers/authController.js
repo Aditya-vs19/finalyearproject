@@ -20,8 +20,8 @@ const registerUser = asyncHandler(async (req, res) => {
   } = req.registrationInput || {};
 
   // Check if user already exists
-  const userExists = await User.findOne({ 
-    $or: [{ email }, { enrollment }] 
+  const userExists = await User.findOne({
+    $or: [{ email }, { enrollment }]
   });
 
   if (userExists) {
@@ -68,7 +68,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     try {
       await sendEmail(email, 'Verify Your Email - GP-ConnecX', emailMessage);
-      
+
       if (process.env.NODE_ENV === 'production') {
         res.status(201).json({
           message: 'Registration successful! In production mode, email verification is simulated. Your OTP is: ' + otp,
@@ -287,7 +287,7 @@ const resetPasswordAfterOtp = asyncHandler(async (req, res) => {
   try {
     const secret = process.env.JWT_SECRET || 'fallback_jwt_secret_key_for_development_only';
     decoded = jwt.verify(token, secret);
-    
+
     // Check if token was issued via OTP method
     if (decoded.authMethod !== 'otp') {
       return res.status(403).json({ message: 'Invalid reset token' });
