@@ -69,16 +69,36 @@ const registerUser = asyncHandler(async (req, res) => {
     try {
       await sendEmail(email, 'Verify Your Email - GP-ConnecX', emailMessage);
 
-      res.status(201).json({
-        message: 'OTP sent to your email. Please check your inbox and verify your email.',
-        email: user.email,
-      });
+      if (process.env.NODE_ENV === 'production') {
+        // In production, also show OTP in response as backup
+        res.status(201).json({
+          message: 'Registration successful! Please check your email for the OTP. If email delivery fails, your OTP is: ' + otp,
+          email: user.email,
+          otp: otp, // Backup OTP for production
+        });
+      } else {
+        res.status(201).json({
+          message: 'OTP sent to your email. Please check your inbox and verify your email.',
+          email: user.email,
+        });
+      }
     } catch (error) {
       console.error('Email sending failed:', error);
-      // If email sending fails, delete the user
-      await User.findByIdAndDelete(user._id);
-      res.status(500);
-      throw new Error('Failed to send verification email. Please check your email configuration and try again.');
+      
+      if (process.env.NODE_ENV === 'production') {
+        // In production, don't delete user, just provide OTP in response
+        res.status(201).json({
+          message: 'Registration successful! Email delivery failed, but your OTP is: ' + otp,
+          email: user.email,
+          otp: otp,
+          emailFailed: true
+        });
+      } else {
+        // In development, delete user and throw error
+        await User.findByIdAndDelete(user._id);
+        res.status(500);
+        throw new Error('Failed to send verification email. Please check your email configuration and try again.');
+      }
     }
   } else {
     res.status(400);
