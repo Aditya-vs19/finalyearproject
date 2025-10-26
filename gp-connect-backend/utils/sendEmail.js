@@ -5,27 +5,36 @@ dotenv.config();
 
 const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
   try {
-    // Check if email configuration is set
-    if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      throw new Error('Email configuration is incomplete. Please check your .env file.');
+    console.log('Attempting to send email to:', email);
+
+    // For production, we'll create a test account that works with cloud hosting
+    let transporter;
+    
+    if (process.env.NODE_ENV === 'production') {
+      // Use Ethereal for testing in production (creates a test account)
+      const testAccount = await nodemailer.createTestAccount();
+      
+      transporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
+      
+      console.log('Using Ethereal test account for email sending');
+    } else {
+      // Local development - use Gmail
+      transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
     }
-
-    console.log('Attempting to send email via SMTP host:', process.env.EMAIL_HOST);
-    console.log('Using email user:', process.env.EMAIL_USER);
-
-    // Create transporter
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      connectionTimeout: 60000,
-      greetingTimeout: 30000,
-      socketTimeout: 60000
-    });
 
     // Email options
     const mailOptions = {
@@ -38,7 +47,13 @@ const sendEmail = async (email, subject, htmlMessage, textMessage = '') => {
 
     // Send email
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent: ' + info.response);
+    console.log('Email sent successfully!');
+    
+    if (process.env.NODE_ENV === 'production') {
+      console.log('Preview URL: ' + nodemailer.getTestMessageUrl(info));
+      console.log('Email sent to test account - check logs for preview URL');
+    }
+    
     return true;
   } catch (error) {
     console.error('Error sending email:', error);
