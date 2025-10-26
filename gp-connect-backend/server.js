@@ -55,7 +55,14 @@ app.use(cors({
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-
+// Root route for health check
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'GP-Connect Backend API is running!', 
+    status: 'healthy',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Make io available to routes via middleware
 app.use((req, res, next) => {

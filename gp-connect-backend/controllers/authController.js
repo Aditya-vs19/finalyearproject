@@ -68,10 +68,19 @@ const registerUser = asyncHandler(async (req, res) => {
 
     try {
       await sendEmail(email, 'Verify Your Email - GP-ConnecX', emailMessage);
-      res.status(201).json({
-        message: 'OTP sent to your email. Please check your inbox and verify your email.',
-        email: user.email,
-      });
+      
+      if (process.env.NODE_ENV === 'production') {
+        res.status(201).json({
+          message: 'Registration successful! In production mode, email verification is simulated. Your OTP is: ' + otp,
+          email: user.email,
+          otp: otp, // Include OTP in response for production testing
+        });
+      } else {
+        res.status(201).json({
+          message: 'OTP sent to your email. Please check your inbox and verify your email.',
+          email: user.email,
+        });
+      }
     } catch (error) {
       console.error('Email sending failed:', error);
       // If email sending fails, delete the user
