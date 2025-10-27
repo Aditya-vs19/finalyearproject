@@ -74,10 +74,22 @@ const registerUser = asyncHandler(async (req, res) => {
       });
     } catch (error) {
       console.error('Email sending failed:', error);
-      // If email sending fails, delete the user
-      await User.findByIdAndDelete(user._id);
-      res.status(500);
-      throw new Error('Failed to send verification email. Please check your email configuration and try again.');
+      
+      if (process.env.NODE_ENV === 'production') {
+        // In production, don't delete user - provide OTP as fallback
+        res.status(201).json({
+          message: 'Registration successful! Email delivery failed due to server restrictions. Your OTP is: ' + otp,
+          email: user.email,
+          otp: otp,
+          emailFailed: true,
+          note: 'Cloud platforms often block SMTP. Use the OTP above to verify your account.'
+        });
+      } else {
+        // In development, delete user and show error for debugging
+        await User.findByIdAndDelete(user._id);
+        res.status(500);
+        throw new Error('Failed to send verification email. Please check your email configuration and try again.');
+      }
     }
   } else {
     res.status(400);

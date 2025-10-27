@@ -1,20 +1,21 @@
 services:
   - type: web
     name: gp-connect-backend
-    env: node
+    runtime: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm ci
     startCommand: npm start
+    healthCheckPath: /
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
     # Add your environment variables in Render dashboard:
-    # - MONGODB_URI
+    # - MONGODB_URI (or MONGO_URI)
     # - JWT_SECRET
     # - CLOUDINARY_CLOUD_NAME
     # - CLOUDINARY_API_KEY
     # - CLOUDINARY_API_SECRET
-    # - GENERAL_COMMUNITY_ID
     # - CHAT_SECRET
+    # - EMAIL_USER
+    # - EMAIL_PASS
+    # - CORS_ORIGIN
