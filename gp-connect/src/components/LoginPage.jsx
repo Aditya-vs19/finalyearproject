@@ -116,6 +116,11 @@ function LoginPage({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
           Don't have an account? <span className="auth-link" onClick={onSwitchToRegister}>Register</span>
         </p>
       </form>
+      
+      {/* Support Footer */}
+      <div className="auth-support-footer">
+        <p>Support : <a href="mailto:gpconnex@gmail.com" className="support-email">gpconnex@gmail.com</a></p>
+      </div>
     </div>
   );
 }

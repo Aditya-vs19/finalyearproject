@@ -616,3 +616,85 @@ body {
     margin-bottom: 0.3rem;
   }
 }
+/* 
+Support Footer Styles */
+.auth-support-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(144, 158, 174, 0.2);
+  padding: 1rem 2rem;
+  text-align: center;
+  z-index: 10;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.auth-support-footer p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.support-email {
+  color: #5C8DC5;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  position: relative;
+}
+
+.support-email:hover {
+  color: #909EAE;
+  background: rgba(92, 141, 197, 0.1);
+  text-shadow: 0 0 10px rgba(92, 141, 197, 0.5);
+  transform: translateY(-1px);
+}
+
+.support-email:active {
+  transform: translateY(0);
+}
+
+/* Add bottom padding to auth-container to prevent footer overlap */
+.auth-container {
+  padding-bottom: 80px;
+}
+
+/* Mobile responsive for support footer */
+@media (max-width: 700px) {
+  .auth-support-footer {
+    padding: 0.8rem 1rem;
+    position: fixed;
+    bottom: 0;
+  }
+  
+  .auth-support-footer p {
+    font-size: 0.85rem;
+  }
+  
+  .auth-container {
+    padding-bottom: 70px;
+  }
+  
+  /* Ensure mobile auth-container has proper spacing */
+  .auth-container {
+    min-height: calc(100vh - 70px);
+  }
+}
+
+/* Ensure footer doesn't interfere with form interactions */
+.auth-card {
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 700px) {
+  .auth-card {
+    margin-bottom: 1rem;
+  }
+}

@@ -239,7 +239,7 @@ function RegistrationPage({ onRegister, onSwitchToLogin }) {
       <div className="gradient-blob blob-3"></div>
       <div className="gradient-blob blob-4"></div>
       <div className="gradient-blob blob-5"></div>
-      
+
       <div className="auth-header">
         <h1 className="brand-gradient">GP‑ConnecX</h1>
       </div>
@@ -420,6 +420,11 @@ function RegistrationPage({ onRegister, onSwitchToLogin }) {
           </button>
         </p>
       </form>
+      
+      {/* Support Footer */}
+      <div className="auth-support-footer">
+        <p>Support : <a href="mailto:gpconnex@gmail.com" className="support-email">gpconnex@gmail.com</a></p>
+      </div>
     </div>
   );
 }
