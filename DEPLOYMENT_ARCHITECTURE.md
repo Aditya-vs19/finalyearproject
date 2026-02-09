@@ -130,6 +130,12 @@ communities → Community groups
 conversations → Chat rooms
 messages → Chat messages
 notifications → User notifications
+users → User accounts
+posts → Social media posts
+communities → Community groups
+conversations → Chat rooms
+messages → Chat messages
+notifications → User notifications
 ```
 
 ---
